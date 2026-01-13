@@ -34,8 +34,3 @@ def move_board(board: Board, piece: int, turn: int, dice: int) -> Board:
     ]
     board_new[turn][piece] = move_to
     return board_new
-
-
-
-def add(x: int, y: int) -> int:
-    return x + y

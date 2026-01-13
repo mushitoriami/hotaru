@@ -1,4 +1,4 @@
-from hotaru.hotaru import add, init_board, get_movables_board, move_board
+from hotaru.hotaru import init_board, get_movables_board, move_board
 
 
 def test_init_board() -> None:
@@ -69,7 +69,3 @@ def test_board_4() -> None:
         [0, 1, 2, 3],
         [0, 29, 2, 3],
     ]
-
-
-def test_add() -> None:
-    assert add(2, 2) == 4
