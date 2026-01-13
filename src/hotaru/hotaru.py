@@ -2,7 +2,7 @@ Board = list[int]
 
 
 def init_board() -> Board:
-    raise NotImplementedError
+    return [i // 4 for i in range(16)]
 
 
 def get_movables_board(board: Board, turn: int, dice: int) -> list[int]:
