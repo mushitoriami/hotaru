@@ -24,14 +24,21 @@ def get_movables_board(board: Board, turn: int, dice: int) -> list[int]:
     return moves
 
 
+def get_absolute_pos(pos: int, turn: int) -> int:
+    return (pos - 4 + turn * 10) % 40
+
+
+def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
+    if not (4 <= pos1 <= 43 and 4 <= pos2 <= 43):
+        return False
+    return get_absolute_pos(pos1, turn1) == get_absolute_pos(pos2, turn2)
+
+
 def move_board(board: Board, piece: int, turn: int, dice: int) -> Board:
     move_to = board[turn][piece] + dice if board[turn][piece] >= 4 else 4
     board_new = [
         [
-            p
-            if 4 <= move_to <= 43
-            and board[t][p] == ((move_to - 4) + (turn - t % 4) * 10) % 40 + 4
-            else board[t][p]
+            p if is_same_pos(move_to, turn, board[t][p], t) else board[t][p]
             for p in range(4)
         ]
         for t in range(4)
