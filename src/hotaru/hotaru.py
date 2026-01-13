@@ -1,21 +1,21 @@
-Board = list[int]
+Board = list[list[int]]
 
 
 def init_board() -> Board:
-    return [i // 4 for i in range(16)]
+    return [[i for i in range(4)] for _ in range(4)]
 
 
 def get_movables_board(board: Board, turn: int, dice: int) -> list[int]:
     moves = []
     for i in range(4):
-        move_from = board[i * 4 + turn]
+        move_from = board[turn][i]
         if move_from >= 4:
             move_to = move_from + dice
         elif dice == 6:
             move_to = 4
         else:
             continue
-        if move_to <= 47 and move_to not in [board[j * 4 + turn] for j in range(4)]:
+        if move_to <= 47 and move_to not in board[turn]:
             moves.append(i)
     return moves
 
