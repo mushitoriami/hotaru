@@ -36,9 +36,6 @@ def move_board(board: Board, piece: int, turn: int, dice: int) -> Board:
     return board_new
 
 
-def pass_board(board: Board) -> Board:
-    raise NotImplementedError
-
 
 def add(x: int, y: int) -> int:
     return x + y
