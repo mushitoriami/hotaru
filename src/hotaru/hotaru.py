@@ -20,7 +20,7 @@ def get_movables_board(board: Board, turn: int, dice: int) -> list[int]:
     return moves
 
 
-def move_board(board: Board, piece: int, dice: int) -> Board:
+def move_board(board: Board, piece: int, turn: int, dice: int) -> Board:
     raise NotImplementedError
 
 
