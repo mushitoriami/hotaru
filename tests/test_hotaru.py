@@ -1,8 +1,19 @@
-from hotaru.hotaru import init_board, get_movables_board, move_board
+from hotaru.hotaru import init_board, get_movables_board, move_board, is_end_board
 
 
 def test_init_board() -> None:
     assert init_board() == [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+
+
+def test_end_board() -> None:
+    assert (
+        is_end_board([[45, 44, 47, 46], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], 0)
+        == True
+    )
+    assert (
+        is_end_board([[45, 44, 47, 46], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], 2)
+        == False
+    )
 
 
 def test_board_1() -> None:

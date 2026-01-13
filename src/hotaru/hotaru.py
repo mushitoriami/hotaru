@@ -5,6 +5,10 @@ def init_board() -> Board:
     return [[i for i in range(4)] for _ in range(4)]
 
 
+def is_end_board(board: Board, turn: int) -> bool:
+    return set(board[turn]) == {44, 45, 46, 47}
+
+
 def get_movables_board(board: Board, turn: int, dice: int) -> list[int]:
     moves = []
     for i in range(4):
