@@ -10,7 +10,7 @@ def test_board_1() -> None:
     dice, turn = 2, 0
     assert get_movables_board(board, turn, dice) == [3]
     assert move_board(board, 3, turn, dice) == [
-        [46, 1, 8, 11],
+        [46, 1, 8, 12],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
@@ -48,7 +48,7 @@ def test_board_3() -> None:
 
 
 def test_board_4() -> None:
-    board = [[13, 43, 2, 3], [0, 1, 24, 3], [0, 1, 2, 3], [0, 29, 2, 3]]
+    board = [[13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3], [0, 29, 2, 3]]
     dice, turn = 6, 0
     assert get_movables_board(board, turn, dice) == [0, 2, 3]
     assert move_board(board, 0, turn, dice) == [

@@ -21,7 +21,19 @@ def get_movables_board(board: Board, turn: int, dice: int) -> list[int]:
 
 
 def move_board(board: Board, piece: int, turn: int, dice: int) -> Board:
-    raise NotImplementedError
+    move_to = board[turn][piece] + dice if board[turn][piece] >= 4 else 4
+    board_new = [
+        [
+            p
+            if 4 <= move_to <= 43
+            and board[t][p] == ((move_to - 4) + (turn - t % 4) * 10) % 40 + 4
+            else board[t][p]
+            for p in range(4)
+        ]
+        for t in range(4)
+    ]
+    board_new[turn][piece] = move_to
+    return board_new
 
 
 def pass_board(board: Board) -> Board:
