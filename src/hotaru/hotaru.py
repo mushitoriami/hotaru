@@ -45,3 +45,100 @@ def move_board(board: Board, piece: int, turn: int, dice: int) -> Board:
     ]
     board_new[turn][piece] = move_to
     return board_new
+
+
+def visualize_board(board: Board) -> str:
+    table: list[list[None | str]] = [
+        [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
+        [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
+        [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
+        [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
+        ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+        ["  ", "  ", "  ", "  ", "  ", None, "  ", "  ", "  ", "  ", "  "],
+        ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+        [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
+        [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
+        [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
+        [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
+    ]
+    mapping_r = [
+        (10, 4),
+        (9, 4),
+        (8, 4),
+        (7, 4),
+        (6, 4),
+        (6, 3),
+        (6, 2),
+        (6, 1),
+        (6, 0),
+        (5, 0),
+    ]
+    mapping_g = [
+        (4, 0),
+        (4, 1),
+        (4, 2),
+        (4, 3),
+        (4, 4),
+        (3, 4),
+        (2, 4),
+        (1, 4),
+        (0, 4),
+        (0, 5),
+    ]
+    mapping_b = [
+        (0, 6),
+        (1, 6),
+        (2, 6),
+        (3, 6),
+        (4, 6),
+        (4, 7),
+        (4, 8),
+        (4, 9),
+        (4, 10),
+        (5, 10),
+    ]
+    mapping_y = [
+        (6, 10),
+        (6, 9),
+        (6, 8),
+        (6, 7),
+        (6, 6),
+        (7, 6),
+        (8, 6),
+        (9, 6),
+        (10, 6),
+        (10, 5),
+    ]
+    mapping = [
+        (
+            [(8, 1), (8, 2), (9, 1), (9, 2)]
+            + (mapping_r + mapping_g + mapping_b + mapping_y)
+            + [(9, 5), (8, 5), (7, 5), (6, 5)]
+        ),
+        (
+            [(1, 1), (1, 2), (2, 1), (2, 2)]
+            + (mapping_g + mapping_b + mapping_y + mapping_r)
+            + [(5, 1), (5, 2), (5, 3), (5, 4)]
+        ),
+        (
+            [(1, 8), (1, 9), (2, 8), (2, 9)]
+            + (mapping_b + mapping_y + mapping_r + mapping_g)
+            + [(1, 5), (2, 5), (3, 5), (4, 5)]
+        ),
+        (
+            [(8, 8), (8, 9), (9, 8), (9, 9)]
+            + (mapping_y + mapping_r + mapping_g + mapping_b)
+            + [(5, 9), (5, 8), (5, 7), (5, 6)]
+        ),
+    ]
+    mapping_color = ["R", "G", "B", "Y"]
+    for t in range(4):
+        for p in range(4):
+            x, y = mapping[t][board[t][p]]
+            table[x][y] = mapping_color[t] + str(p + 1)
+    visualized = ""
+    for x in range(11):
+        for c in table[x]:
+            visualized += "[" + c + "]" if c is not None else "    "
+        visualized += "\n"
+    return visualized
