@@ -1,4 +1,10 @@
-from hotaru.hotaru import init_board, get_movables_board, move_board, is_end_board, visualize_board
+from hotaru.hotaru import (
+    init_board,
+    get_movables_board,
+    move_board,
+    is_end_board,
+    visualize_board,
+)
 
 
 def test_init_board() -> None:
