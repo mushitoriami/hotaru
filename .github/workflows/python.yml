@@ -16,7 +16,9 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
     - name: Install `hotaru` and dependencies
-      run: pip install --group dev .
+      run: |
+        pip install -U pip
+        pip install --group dev .
     - name: Check format
       run: ruff check
     - name: Lint
