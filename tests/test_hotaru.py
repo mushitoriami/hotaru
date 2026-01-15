@@ -12,13 +12,9 @@ def test_init_board() -> None:
 
 
 def test_end_board() -> None:
-    assert (
-        is_end_board([[45, 44, 47, 46], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], 0)
-        == True
-    )
-    assert (
-        is_end_board([[45, 44, 47, 46], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], 2)
-        == False
+    assert is_end_board([[45, 44, 47, 46], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], 0)
+    assert not is_end_board(
+        [[45, 44, 47, 46], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], 2
     )
 
 
