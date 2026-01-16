@@ -1,8 +1,14 @@
+import random
+
 Board = list[list[int]]
 
 
 def init_board() -> Board:
     return [[i for i in range(4)] for _ in range(4)]
+
+
+def is_start_board(board: Board, turn: int) -> bool:
+    return set(board[turn]) == {0, 1, 2, 3}
 
 
 def is_end_board(board: Board, turn: int) -> bool:
@@ -142,3 +148,35 @@ def visualize_board(board: Board) -> str:
             visualized += "[" + c + "]" if c is not None else "    "
         visualized += "\n"
     return visualized
+
+
+def game() -> None:
+    board = init_board()
+    turn = 0
+    count_six, count_start = 0, 0
+    while True:
+        dice = random.randint(1, 6)
+        movables = get_movables_board(board, turn, dice)
+        print(visualize_board(board))
+        print()
+        print("Turn: " + ("R", "G", "B", "Y")[turn] + ", Dice: " + str(dice))
+        while True:
+            piece_str = input("> ").strip()
+            if piece_str == "":
+                if len(movables) == 0:
+                    break
+                else:
+                    print("Cannot pass")
+            else:
+                piece = int(piece_str) - 1
+                if piece in movables:
+                    board = move_board(board, piece, turn, dice)
+                    count_six = (count_six + 1) % 3 if dice == 6 else 0
+                    break
+                else:
+                    print("Cannot move")
+        count_start = (count_start + 1) % 3 if is_start_board(board, turn) else 0
+        if is_end_board(board, turn):
+            break
+        if count_six == 0 and count_start == 0:
+            turn = (turn + 1) % 4
