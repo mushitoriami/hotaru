@@ -1,6 +1,6 @@
 [project]
 name = "hotaru"
-version = "0.0.1"
+version = "0.1.0"
 description = "AI for Ludo"
 authors = [
     {name = "Komorebi Sakuramochi",email = "komorebi_sakuramochi@icloud.com"}
