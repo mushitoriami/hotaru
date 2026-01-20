@@ -1,45 +1,45 @@
 import random
 
-Board = list[list[int]]
 
-
-def init_board() -> Board:
-    return [[i for i in range(4)] for _ in range(4)]
+class Board:
+    def __init__(self) -> None:
+        self.board = [[i for i in range(4)] for _ in range(4)]
 
 
 def is_start_board(board: Board, turn: int) -> bool:
-    return set(board[turn]) == {0, 1, 2, 3}
+    return set(board.board[turn]) == {0, 1, 2, 3}
 
 
 def is_end_board(board: Board, turn: int) -> bool:
-    return set(board[turn]) == {44, 45, 46, 47}
+    return set(board.board[turn]) == {44, 45, 46, 47}
 
 
 def get_movables_board(board: Board, turn: int, dice: int) -> list[int]:
     moves = []
     for i in range(4):
-        move_from = board[turn][i]
+        move_from = board.board[turn][i]
         if move_from >= 4:
             move_to = move_from + dice
         elif dice == 6:
             move_to = 4
         else:
             continue
-        if move_to <= 47 and move_to not in board[turn]:
+        if move_to <= 47 and move_to not in board.board[turn]:
             moves.append(i)
     return moves
 
 
 def move_board(board: Board, piece: int, turn: int, dice: int) -> Board:
-    move_to = board[turn][piece] + dice if board[turn][piece] >= 4 else 4
-    board_new = [
+    move_to = board.board[turn][piece] + dice if board.board[turn][piece] >= 4 else 4
+    board_new = Board()
+    board_new.board = [
         [
-            p if is_same_pos(move_to, turn, board[t][p], t) else board[t][p]
+            p if is_same_pos(move_to, turn, board.board[t][p], t) else board.board[t][p]
             for p in range(4)
         ]
         for t in range(4)
     ]
-    board_new[turn][piece] = move_to
+    board_new.board[turn][piece] = move_to
     return board_new
 
 
@@ -130,7 +130,7 @@ def visualize_board(board: Board) -> str:
     mapping_color = ["R", "G", "B", "Y"]
     for t in range(4):
         for p in range(4):
-            x, y = mapping[t][board[t][p]]
+            x, y = mapping[t][board.board[t][p]]
             table[x][y] = mapping_color[t] + str(p + 1)
     visualized = ""
     for x in range(11):
@@ -151,7 +151,7 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
 
 
 def game() -> None:
-    board = init_board()
+    board = Board()
     turn = 0
     count_six, count_start = 0, 0
     while True:
