@@ -25,20 +25,13 @@ class Board:
                 moves.append(i)
         return moves
 
-    def move(self, piece: int, turn: int, dice: int) -> "Board":
+    def move(self, piece: int, turn: int, dice: int) -> None:
         move_to = self.board[turn][piece] + dice if self.board[turn][piece] >= 4 else 4
-        board_new = Board()
-        board_new.board = [
-            [
-                p
-                if is_same_pos(move_to, turn, self.board[t][p], t)
-                else self.board[t][p]
-                for p in range(4)
-            ]
-            for t in range(4)
-        ]
-        board_new.board[turn][piece] = move_to
-        return board_new
+        for t in range(4):
+            for p in range(4):
+                if is_same_pos(move_to, turn, self.board[t][p], t):
+                    self.board[t][p] = p
+        self.board[turn][piece] = move_to
 
     def visualize(self) -> str:
         table: list[list[None | str]] = [
@@ -167,7 +160,7 @@ def game() -> None:
             else:
                 piece = int(piece_str) - 1
                 if piece in movables:
-                    board = board.move(piece, turn, dice)
+                    board.move(piece, turn, dice)
                     count_six = (count_six + 1) % 3 if dice == 6 else 0
                     break
                 else:
