@@ -133,6 +133,10 @@ class Board:
             for c in table[x]:
                 visualized += "[" + c + "]" if c is not None else "    "
             visualized += "\n"
+        visualized += "\n"
+        visualized += (
+            "Turn: " + ("R", "G", "B", "Y")[self.turn] + ", Dice: " + str(self.dice)
+        )
         return visualized
 
 
@@ -153,10 +157,6 @@ def game() -> None:
         board.dice = random.randint(1, 6)
         movables = board.get_movables()
         print(board.visualize())
-        print()
-        print(
-            "Turn: " + ("R", "G", "B", "Y")[board.turn] + ", Dice: " + str(board.dice)
-        )
         while True:
             piece_str = input("> ").strip()
             if piece_str == "":
