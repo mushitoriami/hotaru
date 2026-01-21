@@ -37,9 +37,9 @@ def test_board_0() -> None:
 def test_board_1() -> None:
     board = Board()
     board.board = [[46, 1, 8, 10], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
-    dice, board.turn = 2, 0
-    assert board.get_movables(dice) == [3]
-    board.move(3, dice)
+    board.dice, board.turn = 2, 0
+    assert board.get_movables() == [3]
+    board.move(3)
     assert board.board == [
         [46, 1, 8, 12],
         [0, 1, 2, 3],
@@ -65,9 +65,9 @@ def test_board_1() -> None:
 def test_board_2() -> None:
     board = Board()
     board.board = [[10, 4, 2, 43], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
-    dice, board.turn = 6, 0
-    assert board.get_movables(dice) == [0]
-    board.move(0, dice)
+    board.dice, board.turn = 6, 0
+    assert board.get_movables() == [0]
+    board.move(0)
     assert board.board == [
         [16, 4, 2, 43],
         [0, 1, 2, 3],
@@ -93,9 +93,9 @@ def test_board_2() -> None:
 def test_board_3() -> None:
     board = Board()
     board.board = [[0, 7, 46, 15], [0, 34, 2, 3], [0, 1, 2, 3], [0, 1, 2, 19]]
-    dice, board.turn = 2, 0
-    assert board.get_movables(dice) == [1, 3]
-    board.move(1, dice)
+    board.dice, board.turn = 2, 0
+    assert board.get_movables() == [1, 3]
+    board.move(1)
     assert board.board == [
         [0, 9, 46, 15],
         [0, 34, 2, 3],
@@ -121,9 +121,9 @@ def test_board_3() -> None:
 def test_board_4() -> None:
     board = Board()
     board.board = [[13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3], [0, 29, 2, 3]]
-    dice, board.turn = 6, 0
-    assert board.get_movables(dice) == [0, 2, 3]
-    board.move(2, dice)
+    board.dice, board.turn = 6, 0
+    assert board.get_movables() == [0, 2, 3]
+    board.move(2)
     assert board.board == [
         [13, 43, 4, 3],
         [0, 1, 2, 3],
@@ -149,9 +149,9 @@ def test_board_4() -> None:
 def test_board_5() -> None:
     board = Board()
     board.board = [[0, 29, 2, 3], [13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3]]
-    dice, board.turn = 6, 1
-    assert board.get_movables(dice) == [0, 2, 3]
-    board.move(3, dice)
+    board.dice, board.turn = 6, 1
+    assert board.get_movables() == [0, 2, 3]
+    board.move(3)
     assert board.board == [
         [0, 29, 2, 3],
         [13, 43, 2, 4],

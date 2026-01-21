@@ -5,6 +5,7 @@ class Board:
     def __init__(self) -> None:
         self.board = [[i for i in range(4)] for _ in range(4)]
         self.turn = 0
+        self.dice = 0
 
     def is_start(self) -> bool:
         return set(self.board[self.turn]) == {0, 1, 2, 3}
@@ -12,13 +13,13 @@ class Board:
     def is_end(self) -> bool:
         return set(self.board[self.turn]) == {44, 45, 46, 47}
 
-    def get_movables(self, dice: int) -> list[int]:
+    def get_movables(self) -> list[int]:
         moves = []
         for i in range(4):
             move_from = self.board[self.turn][i]
             if move_from >= 4:
-                move_to = move_from + dice
-            elif dice == 6:
+                move_to = move_from + self.dice
+            elif self.dice == 6:
                 move_to = 4
             else:
                 continue
@@ -26,9 +27,9 @@ class Board:
                 moves.append(i)
         return moves
 
-    def move(self, piece: int, dice: int) -> None:
+    def move(self, piece: int) -> None:
         move_to = (
-            self.board[self.turn][piece] + dice
+            self.board[self.turn][piece] + self.dice
             if self.board[self.turn][piece] >= 4
             else 4
         )
@@ -149,11 +150,13 @@ def game() -> None:
     board = Board()
     count_six, count_start = 0, 0
     while True:
-        dice = random.randint(1, 6)
-        movables = board.get_movables(dice)
+        board.dice = random.randint(1, 6)
+        movables = board.get_movables()
         print(board.visualize())
         print()
-        print("Turn: " + ("R", "G", "B", "Y")[board.turn] + ", Dice: " + str(dice))
+        print(
+            "Turn: " + ("R", "G", "B", "Y")[board.turn] + ", Dice: " + str(board.dice)
+        )
         while True:
             piece_str = input("> ").strip()
             if piece_str == "":
@@ -164,8 +167,8 @@ def game() -> None:
             else:
                 piece = int(piece_str) - 1
                 if piece in movables:
-                    board.move(piece, dice)
-                    count_six = (count_six + 1) % 3 if dice == 6 else 0
+                    board.move(piece)
+                    count_six = (count_six + 1) % 3 if board.dice == 6 else 0
                     break
                 else:
                     print("Cannot move")
