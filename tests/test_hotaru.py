@@ -1,27 +1,23 @@
 from hotaru.hotaru import (
-    init_board,
-    get_movables_board,
-    move_board,
-    is_end_board,
-    visualize_board,
+    Board,
 )
 
 
 def test_init_board() -> None:
-    assert init_board() == [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    assert Board().board == [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
 
 
 def test_end_board() -> None:
-    assert is_end_board([[45, 44, 47, 46], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], 0)
-    assert not is_end_board(
-        [[45, 44, 47, 46], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], 2
-    )
+    board = Board()
+    board.board = [[45, 44, 47, 46], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    assert board.is_end(0)
+    assert not board.is_end(2)
 
 
 def test_board_0() -> None:
-    board = init_board()
+    board = Board()
     assert (
-        visualize_board(board)
+        board.visualize()
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -37,17 +33,18 @@ def test_board_0() -> None:
 
 
 def test_board_1() -> None:
-    board = [[46, 1, 8, 10], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    board = Board()
+    board.board = [[46, 1, 8, 10], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
     dice, turn = 2, 0
-    assert get_movables_board(board, turn, dice) == [3]
-    assert move_board(board, 3, turn, dice) == [
+    assert board.get_movables(turn, dice) == [3]
+    assert board.move(3, turn, dice).board == [
         [46, 1, 8, 12],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
     ]
     assert (
-        visualize_board(board)
+        board.visualize()
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -63,17 +60,18 @@ def test_board_1() -> None:
 
 
 def test_board_2() -> None:
-    board = [[10, 4, 2, 43], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    board = Board()
+    board.board = [[10, 4, 2, 43], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
     dice, turn = 6, 0
-    assert get_movables_board(board, turn, dice) == [0]
-    assert move_board(board, 0, turn, dice) == [
+    assert board.get_movables(turn, dice) == [0]
+    assert board.move(0, turn, dice).board == [
         [16, 4, 2, 43],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
     ]
     assert (
-        visualize_board(board)
+        board.visualize()
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -89,23 +87,24 @@ def test_board_2() -> None:
 
 
 def test_board_3() -> None:
-    board = [[0, 7, 46, 15], [0, 34, 2, 3], [0, 1, 2, 3], [0, 1, 2, 19]]
+    board = Board()
+    board.board = [[0, 7, 46, 15], [0, 34, 2, 3], [0, 1, 2, 3], [0, 1, 2, 19]]
     dice, turn = 2, 0
-    assert get_movables_board(board, turn, dice) == [1, 3]
-    assert move_board(board, 1, turn, dice) == [
+    assert board.get_movables(turn, dice) == [1, 3]
+    assert board.move(1, turn, dice).board == [
         [0, 9, 46, 15],
         [0, 34, 2, 3],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
     ]
-    assert move_board(board, 3, turn, dice) == [
+    assert board.move(3, turn, dice).board == [
         [0, 7, 46, 17],
         [0, 34, 2, 3],
         [0, 1, 2, 3],
         [0, 1, 2, 19],
     ]
     assert (
-        visualize_board(board)
+        board.visualize()
         == "                [  ][  ][  ]                \n"
         + "    [G1][  ]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -121,29 +120,30 @@ def test_board_3() -> None:
 
 
 def test_board_4() -> None:
-    board = [[13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3], [0, 29, 2, 3]]
+    board = Board()
+    board.board = [[13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3], [0, 29, 2, 3]]
     dice, turn = 6, 0
-    assert get_movables_board(board, turn, dice) == [0, 2, 3]
-    assert move_board(board, 0, turn, dice) == [
+    assert board.get_movables(turn, dice) == [0, 2, 3]
+    assert board.move(0, turn, dice).board == [
         [19, 43, 2, 3],
         [0, 1, 34, 3],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
     ]
-    assert move_board(board, 2, turn, dice) == [
+    assert board.move(2, turn, dice).board == [
         [13, 43, 4, 3],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
         [0, 29, 2, 3],
     ]
-    assert move_board(board, 3, turn, dice) == [
+    assert board.move(3, turn, dice).board == [
         [13, 43, 2, 4],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
         [0, 29, 2, 3],
     ]
     assert (
-        visualize_board(board)
+        board.visualize()
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [  ][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -159,29 +159,30 @@ def test_board_4() -> None:
 
 
 def test_board_5() -> None:
-    board = [[0, 29, 2, 3], [13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3]]
+    board = Board()
+    board.board = [[0, 29, 2, 3], [13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3]]
     dice, turn = 6, 1
-    assert get_movables_board(board, turn, dice) == [0, 2, 3]
-    assert move_board(board, 0, turn, dice) == [
+    assert board.get_movables(turn, dice) == [0, 2, 3]
+    assert board.move(0, turn, dice).board == [
         [0, 1, 2, 3],
         [19, 43, 2, 3],
         [0, 1, 34, 3],
         [0, 1, 2, 3],
     ]
-    assert move_board(board, 2, turn, dice) == [
+    assert board.move(2, turn, dice).board == [
         [0, 29, 2, 3],
         [13, 43, 4, 3],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
     ]
-    assert move_board(board, 3, turn, dice) == [
+    assert board.move(3, turn, dice).board == [
         [0, 29, 2, 3],
         [13, 43, 2, 4],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
     ]
     assert (
-        visualize_board(board)
+        board.visualize()
         == "                [  ][G1][  ]                \n"
         + "    [  ][  ]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [  ][B4]    \n"
