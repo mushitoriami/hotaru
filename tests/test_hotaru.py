@@ -17,6 +17,7 @@ def test_end_board() -> None:
 def test_board_0() -> None:
     state = State()
     state.dice = 0
+    assert state.is_start() is True
     assert (
         state.visualize()
         == "                [  ][  ][  ]                \n"
@@ -48,6 +49,7 @@ def test_board_1() -> None:
         [0, 1, 2, 3],
     ]
     state.dice = 5
+    assert state.is_start() is True
     assert (
         state.visualize()
         == "                [  ][  ][  ]                \n"
@@ -79,6 +81,7 @@ def test_board_2() -> None:
         [0, 1, 2, 3],
     ]
     state.dice = 5
+    assert state.is_start() is False
     assert (
         state.visualize()
         == "                [  ][  ][  ]                \n"
@@ -110,6 +113,7 @@ def test_board_3() -> None:
         [0, 1, 2, 3],
     ]
     state.dice = 5
+    assert state.is_start() is False
     assert (
         state.visualize()
         == "                [  ][  ][  ]                \n"
@@ -141,6 +145,7 @@ def test_board_4() -> None:
         [0, 29, 2, 3],
     ]
     state.dice = 3
+    assert state.is_start() is False
     assert (
         state.visualize()
         == "                [  ][  ][  ]                \n"
@@ -172,6 +177,7 @@ def test_board_5() -> None:
         [0, 1, 2, 3],
     ]
     state.dice = 4
+    assert state.is_start() is False
     assert (
         state.visualize()
         == "                [  ][G1][  ]                \n"
