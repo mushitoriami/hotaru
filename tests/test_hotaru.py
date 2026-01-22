@@ -64,7 +64,7 @@ def test_board_1() -> None:
         + "    [  ][  ]    [  ][  ][  ]    [Y3][Y4]    \n"
         + "                [  ][  ][  ]                \n"
         + "\n"
-        + "Turn: R, Dice: 5"
+        + "Turn: G, Dice: 5"
     )
 
 
@@ -126,7 +126,7 @@ def test_board_3() -> None:
         + "    [  ][  ]    [  ][  ][  ]    [Y3][Y4]    \n"
         + "                [G2][  ][  ]                \n"
         + "\n"
-        + "Turn: R, Dice: 5"
+        + "Turn: G, Dice: 5"
     )
 
 

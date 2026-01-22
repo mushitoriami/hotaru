@@ -45,6 +45,17 @@ class Board:
                     if is_same_pos(move_to, self.turn, self.board[t][p], t):
                         self.board[t][p] = p
             self.board[self.turn][piece] = move_to
+        if piece is not None:
+            self.count_six = (self.count_six + 1) % 3 if self.dice == 6 else 0
+        self.count_start = (self.count_start + 1) % 3 if self.is_start() else 0
+        if self.turn is not None:
+            if self.is_end():
+                self.winner = self.turn
+                self.turn = None
+            else:
+                if self.count_six == 0 and self.count_start == 0:
+                    self.turn = (self.turn + 1) % 4
+                self.dice = random.randint(1, 6)
 
     def visualize(self) -> str:
         table: list[list[None | str]] = [
@@ -172,18 +183,5 @@ def game() -> None:
             piece = int(piece_str) - 1 if piece_str != "" else None
             if piece in movables:
                 board.move(piece)
-                if piece is not None:
-                    board.count_six = (
-                        (board.count_six + 1) % 3 if board.dice == 6 else 0
-                    )
                 break
             print("Invalid move")
-        board.count_start = (board.count_start + 1) % 3 if board.is_start() else 0
-        if board.turn is not None:
-            if board.is_end():
-                board.winner = board.turn
-                board.turn = None
-            else:
-                if board.count_six == 0 and board.count_start == 0:
-                    board.turn = (board.turn + 1) % 4
-                board.dice = random.randint(1, 6)
