@@ -4,16 +4,19 @@ import random
 class Board:
     def __init__(self) -> None:
         self.board = [[i for i in range(4)] for _ in range(4)]
-        self.turn = 0
+        self.turn: int | None = 0
+        self.winner: int | None = None
         self.dice = random.randint(1, 6)
 
     def is_start(self) -> bool:
-        return set(self.board[self.turn]) == {0, 1, 2, 3}
+        return self.turn is not None and set(self.board[self.turn]) == {0, 1, 2, 3}
 
     def is_end(self) -> bool:
-        return set(self.board[self.turn]) == {44, 45, 46, 47}
+        return self.turn is not None and set(self.board[self.turn]) == {44, 45, 46, 47}
 
     def get_movables(self) -> list[int]:
+        if self.turn is None:
+            return []
         moves = []
         for i in range(4):
             move_from = self.board[self.turn][i]
@@ -28,16 +31,17 @@ class Board:
         return moves
 
     def move(self, piece: int) -> None:
-        move_to = (
-            self.board[self.turn][piece] + self.dice
-            if self.board[self.turn][piece] >= 4
-            else 4
-        )
-        for t in range(4):
-            for p in range(4):
-                if is_same_pos(move_to, self.turn, self.board[t][p], t):
-                    self.board[t][p] = p
-        self.board[self.turn][piece] = move_to
+        if self.turn is not None:
+            move_to = (
+                self.board[self.turn][piece] + self.dice
+                if self.board[self.turn][piece] >= 4
+                else 4
+            )
+            for t in range(4):
+                for p in range(4):
+                    if is_same_pos(move_to, self.turn, self.board[t][p], t):
+                        self.board[t][p] = p
+            self.board[self.turn][piece] = move_to
 
     def visualize(self) -> str:
         table: list[list[None | str]] = [
@@ -134,9 +138,14 @@ class Board:
                 visualized += "[" + c + "]" if c is not None else "    "
             visualized += "\n"
         visualized += "\n"
-        visualized += (
-            "Turn: " + ("R", "G", "B", "Y")[self.turn] + ", Dice: " + str(self.dice)
-        )
+        if self.turn is not None:
+            visualized += (
+                "Turn: " + ("R", "G", "B", "Y")[self.turn] + ", Dice: " + str(self.dice)
+            )
+        elif self.winner is not None:
+            visualized += "Winner: " + ("R", "G", "B", "Y")[self.winner]
+        else:
+            assert False, "unreachable"
         return visualized
 
 
@@ -172,8 +181,11 @@ def game() -> None:
                 else:
                     print("Cannot move")
         count_start = (count_start + 1) % 3 if board.is_start() else 0
-        if board.is_end():
-            break
-        if count_six == 0 and count_start == 0:
-            board.turn = (board.turn + 1) % 4
-        board.dice = random.randint(1, 6)
+        if board.turn is not None:
+            if board.is_end():
+                board.winner = board.turn
+                board.turn = None
+            else:
+                if count_six == 0 and count_start == 0:
+                    board.turn = (board.turn + 1) % 4
+                board.dice = random.randint(1, 6)
