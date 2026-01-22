@@ -14,10 +14,10 @@ class Board:
     def is_end(self) -> bool:
         return self.turn is not None and set(self.board[self.turn]) == {44, 45, 46, 47}
 
-    def get_movables(self) -> list[int]:
+    def get_movables(self) -> list[int | None]:
         if self.turn is None:
             return []
-        moves = []
+        moves: list[int | None] = []
         for i in range(4):
             move_from = self.board[self.turn][i]
             if move_from >= 4:
@@ -28,10 +28,12 @@ class Board:
                 continue
             if move_to <= 47 and move_to not in self.board[self.turn]:
                 moves.append(i)
+        if len(moves) == 0:
+            moves.append(None)
         return moves
 
-    def move(self, piece: int) -> None:
-        if self.turn is not None:
+    def move(self, piece: int | None) -> None:
+        if self.turn is not None and piece is not None:
             move_to = (
                 self.board[self.turn][piece] + self.dice
                 if self.board[self.turn][piece] >= 4
@@ -167,19 +169,13 @@ def game() -> None:
         print(board.visualize())
         while True:
             piece_str = input("> ").strip()
-            if piece_str == "":
-                if len(movables) == 0:
-                    break
-                else:
-                    print("Cannot pass")
-            else:
-                piece = int(piece_str) - 1
-                if piece in movables:
-                    board.move(piece)
+            piece = int(piece_str) - 1 if piece_str != "" else None
+            if piece in movables:
+                board.move(piece)
+                if piece is not None:
                     count_six = (count_six + 1) % 3 if board.dice == 6 else 0
-                    break
-                else:
-                    print("Cannot move")
+                break
+            print("Invalid move")
         count_start = (count_start + 1) % 3 if board.is_start() else 0
         if board.turn is not None:
             if board.is_end():
