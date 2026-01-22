@@ -7,6 +7,7 @@ class Board:
         self.turn: int | None = 0
         self.winner: int | None = None
         self.dice = random.randint(1, 6)
+        self.count_six, self.count_start = 0, 0
 
     def is_start(self) -> bool:
         return self.turn is not None and set(self.board[self.turn]) == {0, 1, 2, 3}
@@ -163,7 +164,6 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
 
 def game() -> None:
     board = Board()
-    count_six, count_start = 0, 0
     while True:
         movables = board.get_movables()
         print(board.visualize())
@@ -173,15 +173,17 @@ def game() -> None:
             if piece in movables:
                 board.move(piece)
                 if piece is not None:
-                    count_six = (count_six + 1) % 3 if board.dice == 6 else 0
+                    board.count_six = (
+                        (board.count_six + 1) % 3 if board.dice == 6 else 0
+                    )
                 break
             print("Invalid move")
-        count_start = (count_start + 1) % 3 if board.is_start() else 0
+        board.count_start = (board.count_start + 1) % 3 if board.is_start() else 0
         if board.turn is not None:
             if board.is_end():
                 board.winner = board.turn
                 board.turn = None
             else:
-                if count_six == 0 and count_start == 0:
+                if board.count_six == 0 and board.count_start == 0:
                     board.turn = (board.turn + 1) % 4
                 board.dice = random.randint(1, 6)
