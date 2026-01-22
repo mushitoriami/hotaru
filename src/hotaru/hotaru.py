@@ -5,7 +5,7 @@ class Board:
     def __init__(self) -> None:
         self.board = [[i for i in range(4)] for _ in range(4)]
         self.turn = 0
-        self.dice = 0
+        self.dice = random.randint(1, 6)
 
     def is_start(self) -> bool:
         return set(self.board[self.turn]) == {0, 1, 2, 3}
@@ -153,7 +153,6 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
 def game() -> None:
     board = Board()
     count_six, count_start = 0, 0
-    board.dice = random.randint(1, 6)
     while True:
         movables = board.get_movables()
         print(board.visualize())
