@@ -1,26 +1,24 @@
-from hotaru.hotaru import (
-    Board,
-)
+from hotaru.hotaru import State
 
 
 def test_init_board() -> None:
-    assert Board().board == [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    assert State().board == [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
 
 
 def test_end_board() -> None:
-    board = Board()
-    board.board = [[45, 44, 47, 46], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
-    board.turn = 0
-    assert board.is_end()
-    board.turn = 2
-    assert not board.is_end()
+    state = State()
+    state.board = [[45, 44, 47, 46], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.turn = 0
+    assert state.is_end()
+    state.turn = 2
+    assert not state.is_end()
 
 
 def test_board_0() -> None:
-    board = Board()
-    board.dice = 0
+    state = State()
+    state.dice = 0
     assert (
-        board.visualize()
+        state.visualize()
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -38,20 +36,20 @@ def test_board_0() -> None:
 
 
 def test_board_1() -> None:
-    board = Board()
-    board.board = [[46, 1, 8, 10], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
-    board.dice, board.turn = 2, 0
-    assert board.get_movables() == [3]
-    board.move(3)
-    assert board.board == [
+    state = State()
+    state.board = [[46, 1, 8, 10], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.dice, state.turn = 2, 0
+    assert state.get_movables() == [3]
+    state.move(3)
+    assert state.board == [
         [46, 1, 8, 12],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
     ]
-    board.dice = 5
+    state.dice = 5
     assert (
-        board.visualize()
+        state.visualize()
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -69,20 +67,20 @@ def test_board_1() -> None:
 
 
 def test_board_2() -> None:
-    board = Board()
-    board.board = [[10, 4, 2, 43], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
-    board.dice, board.turn = 6, 0
-    assert board.get_movables() == [0]
-    board.move(0)
-    assert board.board == [
+    state = State()
+    state.board = [[10, 4, 2, 43], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.dice, state.turn = 6, 0
+    assert state.get_movables() == [0]
+    state.move(0)
+    assert state.board == [
         [16, 4, 2, 43],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
     ]
-    board.dice = 5
+    state.dice = 5
     assert (
-        board.visualize()
+        state.visualize()
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -100,20 +98,20 @@ def test_board_2() -> None:
 
 
 def test_board_3() -> None:
-    board = Board()
-    board.board = [[0, 7, 46, 15], [0, 34, 2, 3], [0, 1, 2, 3], [0, 1, 2, 19]]
-    board.dice, board.turn = 2, 0
-    assert board.get_movables() == [1, 3]
-    board.move(1)
-    assert board.board == [
+    state = State()
+    state.board = [[0, 7, 46, 15], [0, 34, 2, 3], [0, 1, 2, 3], [0, 1, 2, 19]]
+    state.dice, state.turn = 2, 0
+    assert state.get_movables() == [1, 3]
+    state.move(1)
+    assert state.board == [
         [0, 9, 46, 15],
         [0, 34, 2, 3],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
     ]
-    board.dice = 5
+    state.dice = 5
     assert (
-        board.visualize()
+        state.visualize()
         == "                [  ][  ][  ]                \n"
         + "    [G1][  ]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -131,20 +129,20 @@ def test_board_3() -> None:
 
 
 def test_board_4() -> None:
-    board = Board()
-    board.board = [[13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3], [0, 29, 2, 3]]
-    board.dice, board.turn = 6, 0
-    assert board.get_movables() == [0, 2, 3]
-    board.move(2)
-    assert board.board == [
+    state = State()
+    state.board = [[13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3], [0, 29, 2, 3]]
+    state.dice, state.turn = 6, 0
+    assert state.get_movables() == [0, 2, 3]
+    state.move(2)
+    assert state.board == [
         [13, 43, 4, 3],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
         [0, 29, 2, 3],
     ]
-    board.dice = 3
+    state.dice = 3
     assert (
-        board.visualize()
+        state.visualize()
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -162,20 +160,20 @@ def test_board_4() -> None:
 
 
 def test_board_5() -> None:
-    board = Board()
-    board.board = [[0, 29, 2, 3], [13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3]]
-    board.dice, board.turn = 6, 1
-    assert board.get_movables() == [0, 2, 3]
-    board.move(3)
-    assert board.board == [
+    state = State()
+    state.board = [[0, 29, 2, 3], [13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3]]
+    state.dice, state.turn = 6, 1
+    assert state.get_movables() == [0, 2, 3]
+    state.move(3)
+    assert state.board == [
         [0, 29, 2, 3],
         [13, 43, 2, 4],
         [0, 1, 2, 3],
         [0, 1, 2, 3],
     ]
-    board.dice = 4
+    state.dice = 4
     assert (
-        board.visualize()
+        state.visualize()
         == "                [  ][G1][  ]                \n"
         + "    [  ][  ]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][  ]    [  ][  ][  ]    [B3][B4]    \n"

@@ -1,7 +1,7 @@
 import random
 
 
-class Board:
+class State:
     def __init__(self) -> None:
         self.board = [[i for i in range(4)] for _ in range(4)]
         self.turn: int | None = 0
@@ -174,14 +174,14 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
 
 
 def game() -> None:
-    board = Board()
+    state = State()
     while True:
-        movables = board.get_movables()
-        print(board.visualize())
+        movables = state.get_movables()
+        print(state.visualize())
         while True:
             piece_str = input("> ").strip()
             piece = int(piece_str) - 1 if piece_str != "" else None
             if piece in movables:
-                board.move(piece)
+                state.move(piece)
                 break
             print("Invalid move")
