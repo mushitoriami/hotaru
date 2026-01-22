@@ -153,8 +153,8 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
 def game() -> None:
     board = Board()
     count_six, count_start = 0, 0
+    board.dice = random.randint(1, 6)
     while True:
-        board.dice = random.randint(1, 6)
         movables = board.get_movables()
         print(board.visualize())
         while True:
@@ -177,3 +177,4 @@ def game() -> None:
             break
         if count_six == 0 and count_start == 0:
             board.turn = (board.turn + 1) % 4
+        board.dice = random.randint(1, 6)

@@ -18,6 +18,7 @@ def test_end_board() -> None:
 
 def test_board_0() -> None:
     board = Board()
+    board.dice = 0
     assert (
         board.visualize()
         == "                [  ][  ][  ]                \n"
@@ -48,6 +49,7 @@ def test_board_1() -> None:
         [0, 1, 2, 3],
         [0, 1, 2, 3],
     ]
+    board.dice = 5
     assert (
         board.visualize()
         == "                [  ][  ][  ]                \n"
@@ -62,7 +64,7 @@ def test_board_1() -> None:
         + "    [  ][  ]    [  ][  ][  ]    [Y3][Y4]    \n"
         + "                [  ][  ][  ]                \n"
         + "\n"
-        + "Turn: R, Dice: 2"
+        + "Turn: R, Dice: 5"
     )
 
 
@@ -78,6 +80,7 @@ def test_board_2() -> None:
         [0, 1, 2, 3],
         [0, 1, 2, 3],
     ]
+    board.dice = 5
     assert (
         board.visualize()
         == "                [  ][  ][  ]                \n"
@@ -92,7 +95,7 @@ def test_board_2() -> None:
         + "    [R3][  ]    [  ][  ][  ]    [Y3][Y4]    \n"
         + "                [R2][R4][  ]                \n"
         + "\n"
-        + "Turn: R, Dice: 6"
+        + "Turn: R, Dice: 5"
     )
 
 
@@ -108,6 +111,7 @@ def test_board_3() -> None:
         [0, 1, 2, 3],
         [0, 1, 2, 3],
     ]
+    board.dice = 5
     assert (
         board.visualize()
         == "                [  ][  ][  ]                \n"
@@ -122,7 +126,7 @@ def test_board_3() -> None:
         + "    [  ][  ]    [  ][  ][  ]    [Y3][Y4]    \n"
         + "                [G2][  ][  ]                \n"
         + "\n"
-        + "Turn: R, Dice: 2"
+        + "Turn: R, Dice: 5"
     )
 
 
@@ -138,6 +142,7 @@ def test_board_4() -> None:
         [0, 1, 2, 3],
         [0, 29, 2, 3],
     ]
+    board.dice = 3
     assert (
         board.visualize()
         == "                [  ][  ][  ]                \n"
@@ -152,7 +157,7 @@ def test_board_4() -> None:
         + "    [  ][R4]    [  ][  ][  ]    [Y3][Y4]    \n"
         + "                [R3][R2][  ]                \n"
         + "\n"
-        + "Turn: R, Dice: 6"
+        + "Turn: R, Dice: 3"
     )
 
 
@@ -168,6 +173,7 @@ def test_board_5() -> None:
         [0, 1, 2, 3],
         [0, 1, 2, 3],
     ]
+    board.dice = 4
     assert (
         board.visualize()
         == "                [  ][G1][  ]                \n"
@@ -182,5 +188,5 @@ def test_board_5() -> None:
         + "    [R3][R4]    [  ][  ][  ]    [Y3][Y4]    \n"
         + "                [  ][  ][  ]                \n"
         + "\n"
-        + "Turn: G, Dice: 6"
+        + "Turn: G, Dice: 4"
     )
