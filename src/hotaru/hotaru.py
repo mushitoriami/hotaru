@@ -173,7 +173,7 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
     return get_absolute_pos(pos1, turn1) == get_absolute_pos(pos2, turn2)
 
 
-def game() -> None:
+def cli() -> None:
     state = State()
     while True:
         movables = state.get_movables()
