@@ -16,7 +16,7 @@ def test_end_board() -> None:
 
 def test_board_0() -> None:
     state = State()
-    state.dice = 0
+    state.dice = 1
     assert state.is_start() is True
     assert (
         state.visualize()
@@ -32,8 +32,9 @@ def test_board_0() -> None:
         + "    [R3][R4]    [  ][  ][  ]    [Y3][Y4]    \n"
         + "                [  ][  ][  ]                \n"
         + "\n"
-        + "Turn: R, Dice: 0"
+        + "Turn: R, Dice: 1"
     )
+    assert state.eval() == {None: 0}
 
 
 def test_board_1() -> None:
@@ -66,6 +67,7 @@ def test_board_1() -> None:
         + "\n"
         + "Turn: G, Dice: 5"
     )
+    assert state.eval() == {None: 0}
 
 
 def test_board_2() -> None:
@@ -98,6 +100,7 @@ def test_board_2() -> None:
         + "\n"
         + "Turn: R, Dice: 5"
     )
+    assert state.eval() == {0: 0, 1: 0}
 
 
 def test_board_3() -> None:
@@ -130,6 +133,7 @@ def test_board_3() -> None:
         + "\n"
         + "Turn: G, Dice: 5"
     )
+    assert state.eval() == {1: 0}
 
 
 def test_board_4() -> None:
@@ -162,6 +166,7 @@ def test_board_4() -> None:
         + "\n"
         + "Turn: R, Dice: 3"
     )
+    assert state.eval() == {0: 0, 1: 0, 2: 0}
 
 
 def test_board_5() -> None:
@@ -194,3 +199,4 @@ def test_board_5() -> None:
         + "\n"
         + "Turn: G, Dice: 4"
     )
+    assert state.eval() == {0: 0, 1: 0, 3: 0}

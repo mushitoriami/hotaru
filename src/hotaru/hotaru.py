@@ -57,6 +57,9 @@ class State:
                     self.turn = (self.turn + 1) % 4
                 self.dice = random.randint(1, 6)
 
+    def eval(self) -> dict[int | None, float]:
+        return {move: 0 for move in self.get_movables()}
+
     def visualize(self) -> str:
         table: list[list[None | str]] = [
             [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
