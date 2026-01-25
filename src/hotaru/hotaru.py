@@ -182,9 +182,12 @@ def cli() -> None:
         movables = state.get_movables()
         print(state.visualize())
         while True:
-            piece_str = input("> ").strip()
-            piece = int(piece_str) - 1 if piece_str != "" else None
-            if piece in movables:
-                state.move(piece)
-                break
-            print("Invalid move")
+            query = input("> ").split()
+            if query[0] in ("move", "pass"):
+                piece = int(query[1]) - 1 if query[0] == "move" else None
+                if piece in movables:
+                    state.move(piece)
+                    break
+                print("Invalid move")
+            else:
+                print("Unknown command")
