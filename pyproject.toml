@@ -27,3 +27,29 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 strict = true
+
+
+[tool.tox]
+requires = ["tox>=4.19"]
+env_list = ["3.14", "3.13", "3.12", "type", "lint", "format"]
+
+
+[tool.tox.env.lint]
+description = "Lint"
+commands = [["ruff", "check"]]
+
+
+[tool.tox.env.format]
+description = "Check format"
+commands = [["ruff", "format", "--check"]]
+
+
+[tool.tox.env.type]
+description = "Run type checks"
+commands = [["mypy", "."]]
+
+
+[tool.tox.env_run_base]
+description = "Run tests under {base_python}"
+dependency_groups = ["dev"]
+commands = [["pytest"]]
