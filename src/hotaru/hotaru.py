@@ -207,5 +207,16 @@ def cli() -> None:
                         ]
                     )
                 )
+            elif query[0] == "auto":
+                scores = state.eval()
+                move = random.choice(
+                    [
+                        move
+                        for move, score in scores.items()
+                        if score == max(scores.values())
+                    ]
+                )
+                state.move(move)
+                break
             else:
                 print("Unknown command")
