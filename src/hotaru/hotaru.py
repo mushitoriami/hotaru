@@ -194,5 +194,18 @@ def cli() -> None:
                     state.move(None)
                     break
                 print("Cannot pass")
+            elif query[0] == "eval":
+                scores = state.eval()
+                print(
+                    "Scores | "
+                    + ", ".join(
+                        [
+                            (str(move + 1) if move is not None else "Pass")
+                            + ": "
+                            + str(score)
+                            for move, score in scores.items()
+                        ]
+                    )
+                )
             else:
                 print("Unknown command")
