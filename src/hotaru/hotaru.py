@@ -218,5 +218,11 @@ def cli() -> None:
                 )
                 state.move(move)
                 break
+            elif query[0] == "dice":
+                dice = int(query[1])
+                if 1 <= dice <= 6:
+                    state.dice = dice
+                    break
+                print("Invalid dice roll: " + query[1])
             else:
                 print("Unknown command")
