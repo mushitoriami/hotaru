@@ -224,5 +224,8 @@ def cli() -> None:
                     state.dice = dice
                     break
                 print("Invalid dice roll: " + query[1])
+            elif query[0] == "new":
+                state = State()
+                break
             else:
                 print("Unknown command")
