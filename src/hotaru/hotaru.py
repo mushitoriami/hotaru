@@ -28,7 +28,7 @@ class State:
             else:
                 continue
             if move_to <= 47 and move_to not in self.board[self.turn]:
-                moves.append(i)
+                moves.append(i + 1)
         if len(moves) == 0:
             moves.append(None)
         return moves
@@ -36,15 +36,15 @@ class State:
     def move(self, piece: int | None) -> None:
         if self.turn is not None and piece is not None:
             move_to = (
-                self.board[self.turn][piece] + self.dice
-                if self.board[self.turn][piece] >= 4
+                self.board[self.turn][piece - 1] + self.dice
+                if self.board[self.turn][piece - 1] >= 4
                 else 4
             )
             for t in range(4):
                 for p in range(4):
                     if is_same_pos(move_to, self.turn, self.board[t][p], t):
                         self.board[t][p] = p
-            self.board[self.turn][piece] = move_to
+            self.board[self.turn][piece - 1] = move_to
         if piece is not None:
             self.count_six = (self.count_six + 1) % 3 if self.dice == 6 else 0
         self.count_start = (self.count_start + 1) % 3 if self.is_start() else 0
@@ -184,7 +184,7 @@ def cli() -> None:
         while True:
             query = input("> ").split()
             if query[0] == "move":
-                piece = int(query[1]) - 1
+                piece = int(query[1])
                 if piece in movables:
                     state.move(piece)
                     break
@@ -200,7 +200,7 @@ def cli() -> None:
                     "Scores | "
                     + ", ".join(
                         [
-                            (str(move + 1) if move is not None else "Pass")
+                            (str(move) if move is not None else "Pass")
                             + ": "
                             + str(score)
                             for move, score in scores.items()
