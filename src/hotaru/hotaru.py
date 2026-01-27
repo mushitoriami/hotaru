@@ -194,5 +194,38 @@ def cli() -> None:
                     state.move(None)
                     break
                 print("Cannot pass")
+            elif query[0] == "eval":
+                scores = state.eval()
+                print(
+                    "Scores | "
+                    + ", ".join(
+                        [
+                            (str(move + 1) if move is not None else "Pass")
+                            + ": "
+                            + str(score)
+                            for move, score in scores.items()
+                        ]
+                    )
+                )
+            elif query[0] == "auto":
+                scores = state.eval()
+                move = random.choice(
+                    [
+                        move
+                        for move, score in scores.items()
+                        if score == max(scores.values())
+                    ]
+                )
+                state.move(move)
+                break
+            elif query[0] == "dice":
+                dice = int(query[1])
+                if 1 <= dice <= 6:
+                    state.dice = dice
+                    break
+                print("Invalid dice roll: " + query[1])
+            elif query[0] == "new":
+                state = State()
+                break
             else:
                 print("Unknown command")
