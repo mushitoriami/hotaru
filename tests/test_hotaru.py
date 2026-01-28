@@ -41,8 +41,8 @@ def test_board_1() -> None:
     state = State()
     state.board = [[46, 1, 8, 10], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
     state.dice, state.turn = 2, 0
-    assert state.get_movables() == [3]
-    state.move(3)
+    assert state.get_movables() == [4]
+    state.move(4)
     assert state.board == [
         [46, 1, 8, 12],
         [0, 1, 2, 3],
@@ -74,8 +74,8 @@ def test_board_2() -> None:
     state = State()
     state.board = [[10, 4, 2, 43], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
     state.dice, state.turn = 6, 0
-    assert state.get_movables() == [0]
-    state.move(0)
+    assert state.get_movables() == [1]
+    state.move(1)
     assert state.board == [
         [16, 4, 2, 43],
         [0, 1, 2, 3],
@@ -100,15 +100,15 @@ def test_board_2() -> None:
         + "\n"
         + "Turn: R, Dice: 5"
     )
-    assert state.eval() == {0: 0, 1: 0}
+    assert state.eval() == {1: 0, 2: 0}
 
 
 def test_board_3() -> None:
     state = State()
     state.board = [[0, 7, 46, 15], [0, 34, 2, 3], [0, 1, 2, 3], [0, 1, 2, 19]]
     state.dice, state.turn = 2, 0
-    assert state.get_movables() == [1, 3]
-    state.move(1)
+    assert state.get_movables() == [2, 4]
+    state.move(2)
     assert state.board == [
         [0, 9, 46, 15],
         [0, 34, 2, 3],
@@ -133,15 +133,15 @@ def test_board_3() -> None:
         + "\n"
         + "Turn: G, Dice: 5"
     )
-    assert state.eval() == {1: 0}
+    assert state.eval() == {2: 0}
 
 
 def test_board_4() -> None:
     state = State()
     state.board = [[13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3], [0, 29, 2, 3]]
     state.dice, state.turn = 6, 0
-    assert state.get_movables() == [0, 2, 3]
-    state.move(2)
+    assert state.get_movables() == [1, 3, 4]
+    state.move(3)
     assert state.board == [
         [13, 43, 4, 3],
         [0, 1, 2, 3],
@@ -166,15 +166,15 @@ def test_board_4() -> None:
         + "\n"
         + "Turn: R, Dice: 3"
     )
-    assert state.eval() == {0: 0, 1: 0, 2: 0}
+    assert state.eval() == {1: 0, 2: 0, 3: 0}
 
 
 def test_board_5() -> None:
     state = State()
     state.board = [[0, 29, 2, 3], [13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3]]
     state.dice, state.turn = 6, 1
-    assert state.get_movables() == [0, 2, 3]
-    state.move(3)
+    assert state.get_movables() == [1, 3, 4]
+    state.move(4)
     assert state.board == [
         [0, 29, 2, 3],
         [13, 43, 2, 4],
@@ -199,4 +199,4 @@ def test_board_5() -> None:
         + "\n"
         + "Turn: G, Dice: 4"
     )
-    assert state.eval() == {0: 0, 1: 0, 3: 0}
+    assert state.eval() == {1: 0, 2: 0, 4: 0}
