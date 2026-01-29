@@ -178,11 +178,16 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
 
 def cli() -> None:
     state = State()
+    query_previous = [""]
     while True:
         movables = state.get_movables()
         print(state.visualize())
         while True:
             query = input("> ").split()
+            if len(query) == 0:
+                query = query_previous
+            else:
+                query_previous = query
             if query[0] == "move":
                 piece = int(query[1])
                 if piece in movables:
