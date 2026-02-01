@@ -1,4 +1,4 @@
-from hotaru.hotaru import State
+from hotaru.hotaru import State, get_absolute_pos, is_same_pos
 
 
 def test_init_board() -> None:
@@ -200,3 +200,51 @@ def test_board_5() -> None:
         + "Turn: G, Dice: 4"
     )
     assert state.eval() == {1: 0, 2: 0, 4: 0}
+
+
+def test_get_absolute_pos() -> None:
+    # turn=0: (pos - 4) % 40
+    assert get_absolute_pos(4, 0) == 0
+    assert get_absolute_pos(14, 0) == 10
+    assert get_absolute_pos(43, 0) == 39
+
+    # turn=1: (pos - 4 + 10) % 40
+    assert get_absolute_pos(4, 1) == 10
+    assert get_absolute_pos(14, 1) == 20
+    assert get_absolute_pos(43, 1) == 9
+
+    # turn=2: (pos - 4 + 20) % 40
+    assert get_absolute_pos(4, 2) == 20
+    assert get_absolute_pos(14, 2) == 30
+    assert get_absolute_pos(43, 2) == 19
+
+    # turn=3: (pos - 4 + 30) % 40
+    assert get_absolute_pos(4, 3) == 30
+    assert get_absolute_pos(14, 3) == 0
+    assert get_absolute_pos(43, 3) == 29
+
+
+def test_is_same_pos() -> None:
+    # Same absolute position with different turns
+    # pos=4, turn=0 has absolute 0; pos=14, turn=3 has absolute (14-4+30)%40=0
+    assert is_same_pos(4, 0, 14, 3) is True
+    assert is_same_pos(14, 3, 4, 0) is True
+
+    # pos=14, turn=0 has absolute 10; pos=4, turn=1 has absolute 10
+    assert is_same_pos(14, 0, 4, 1) is True
+    assert is_same_pos(4, 1, 14, 0) is True
+
+    # Same position and turn
+    assert is_same_pos(10, 0, 10, 0) is True
+    assert is_same_pos(20, 2, 20, 2) is True
+
+    # Different absolute positions
+    assert is_same_pos(4, 0, 5, 0) is False
+    assert is_same_pos(10, 1, 20, 2) is False
+
+    # Out of range positions (pos < 4 or pos > 43)
+    assert is_same_pos(3, 0, 10, 0) is False
+    assert is_same_pos(10, 0, 3, 0) is False
+    assert is_same_pos(44, 0, 10, 0) is False
+    assert is_same_pos(10, 0, 44, 0) is False
+    assert is_same_pos(0, 0, 50, 0) is False
