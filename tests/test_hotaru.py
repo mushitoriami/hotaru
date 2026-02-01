@@ -200,3 +200,41 @@ def test_board_5() -> None:
         + "Turn: G, Dice: 4"
     )
     assert state.eval() == {1: 0, 2: 0, 4: 0}
+
+
+def test_visualize_colored() -> None:
+    """Test that colored output contains ANSI escape codes."""
+    state = State()
+    state.dice = 1
+
+    # ANSI color codes
+    red_bg = "\033[97;41m"
+    green_bg = "\033[97;42m"
+    blue_bg = "\033[97;44m"
+    yellow_bg = "\033[30;43m"
+    reset = "\033[0m"
+
+    colored_output = state.visualize(colored=True)
+
+    # Check that colored pieces have ANSI codes
+    assert f"[{red_bg}R1{reset}]" in colored_output
+    assert f"[{green_bg}G1{reset}]" in colored_output
+    assert f"[{blue_bg}B1{reset}]" in colored_output
+    assert f"[{yellow_bg}Y1{reset}]" in colored_output
+
+    # Check that Turn label is colored
+    assert f"Turn: {red_bg}R{reset}, Dice: 1" in colored_output
+
+
+def test_visualize_colored_winner() -> None:
+    """Test that winner output is colored."""
+    state = State()
+    state.board = [[44, 45, 46, 47], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.turn = None
+    state.winner = 0
+
+    red_bg = "\033[97;41m"
+    reset = "\033[0m"
+
+    colored_output = state.visualize(colored=True)
+    assert f"Winner: {red_bg}R{reset}" in colored_output
