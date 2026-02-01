@@ -19,7 +19,7 @@ def test_board_0() -> None:
     state.dice = 1
     assert state.is_start() is True
     assert (
-        state.visualize()
+        state.visualize(colored=False)
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -52,7 +52,7 @@ def test_board_1() -> None:
     state.dice = 5
     assert state.is_start() is True
     assert (
-        state.visualize()
+        state.visualize(colored=False)
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -85,7 +85,7 @@ def test_board_2() -> None:
     state.dice = 5
     assert state.is_start() is False
     assert (
-        state.visualize()
+        state.visualize(colored=False)
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -118,7 +118,7 @@ def test_board_3() -> None:
     state.dice = 5
     assert state.is_start() is False
     assert (
-        state.visualize()
+        state.visualize(colored=False)
         == "                [  ][  ][  ]                \n"
         + "    [G1][  ]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -151,7 +151,7 @@ def test_board_4() -> None:
     state.dice = 3
     assert state.is_start() is False
     assert (
-        state.visualize()
+        state.visualize(colored=False)
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -184,7 +184,7 @@ def test_board_5() -> None:
     state.dice = 4
     assert state.is_start() is False
     assert (
-        state.visualize()
+        state.visualize(colored=False)
         == "                [  ][G1][  ]                \n"
         + "    [  ][  ]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][  ]    [  ][  ][  ]    [B3][B4]    \n"
