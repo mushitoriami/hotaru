@@ -238,3 +238,159 @@ def test_visualize_colored_winner() -> None:
 
     colored_output = state.visualize(colored=True)
     assert f"Winner: {red_bg}R{reset}" in colored_output
+
+
+def test_three_sixes_rule() -> None:
+    """After rolling three consecutive 6s and moving, turn should advance."""
+    state = State()
+    # Set up board so Red has pieces that can move
+    state.board = [[4, 5, 6, 7], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.turn = 0
+    state.count_six = 0
+
+    # First 6: move piece, count_six becomes 1, turn stays with Red
+    state.dice = 6
+    state.move(1)  # Move piece 1
+    assert state.count_six == 1
+    assert state.turn == 0  # Still Red's turn
+
+    # Second 6: move piece, count_six becomes 2, turn stays with Red
+    state.dice = 6
+    state.move(1)
+    assert state.count_six == 2
+    assert state.turn == 0  # Still Red's turn
+
+    # Third 6: move piece, count_six wraps to 0, turn advances to Green
+    state.dice = 6
+    state.move(1)
+    assert state.count_six == 0
+    assert state.turn == 1  # Now Green's turn
+
+
+def test_three_sixes_rule_reset_on_non_six() -> None:
+    """Rolling a non-6 should reset count_six to 0."""
+    state = State()
+    state.board = [[4, 5, 6, 7], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.turn = 0
+    state.count_six = 0
+
+    # Roll a 6, count_six becomes 1
+    state.dice = 6
+    state.move(1)
+    assert state.count_six == 1
+    assert state.turn == 0
+
+    # Roll another 6, count_six becomes 2
+    state.dice = 6
+    state.move(1)
+    assert state.count_six == 2
+    assert state.turn == 0
+
+    # Roll a non-6, count_six resets to 0, turn advances
+    state.dice = 3
+    state.move(1)
+    assert state.count_six == 0
+    assert state.turn == 1  # Turn advances to Green
+
+
+def test_three_sixes_rule_pass_does_not_count() -> None:
+    """Passing (piece=None) should not increment count_six."""
+    state = State()
+    # Red is at start, can only pass with non-6
+    state.board = [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.turn = 0
+    state.count_six = 2  # Already at 2 sixes
+
+    # Dice is not 6, but passing - count_six should NOT update
+    state.dice = 3
+    state.move(None)  # Pass
+    # count_six doesn't update when piece is None
+    assert state.count_six == 2
+
+
+def test_three_starts_rule() -> None:
+    """After being stuck at start three times, turn should advance."""
+    state = State()
+    # All players at start
+    state.board = [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.turn = 0
+    state.count_start = 0
+
+    # First start: pass, count_start becomes 1, turn stays
+    state.dice = 3  # Can't move without a 6
+    assert state.get_movables() == [None]
+    state.move(None)
+    assert state.count_start == 1
+    assert state.turn == 0  # Still Red's turn
+
+    # Second start: pass, count_start becomes 2, turn stays
+    state.dice = 2
+    state.move(None)
+    assert state.count_start == 2
+    assert state.turn == 0  # Still Red's turn
+
+    # Third start: pass, count_start wraps to 0, turn advances
+    state.dice = 4
+    state.move(None)
+    assert state.count_start == 0
+    assert state.turn == 1  # Now Green's turn
+
+
+def test_three_starts_rule_reset_on_leaving_start() -> None:
+    """Moving a piece out of start should reset count_start to 0."""
+    state = State()
+    state.board = [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.turn = 0
+    state.count_start = 0
+
+    # First start: pass, count_start becomes 1
+    state.dice = 3
+    state.move(None)
+    assert state.count_start == 1
+    assert state.turn == 0
+
+    # Second start: pass, count_start becomes 2
+    state.dice = 2
+    state.move(None)
+    assert state.count_start == 2
+    assert state.turn == 0
+
+    # Roll a 6 and move out of start - is_start becomes False, count_start resets
+    state.dice = 6
+    state.move(1)  # Move piece 1 out of start
+    assert state.board[0][0] == 4  # Piece moved to position 4
+    assert state.is_start() is False
+    assert state.count_start == 0
+    # count_six is 1 (rolled a 6), so turn stays
+    assert state.count_six == 1
+    assert state.turn == 0
+
+
+def test_three_starts_with_six_interaction() -> None:
+    """Test interaction between count_start and count_six when rolling 6 at start."""
+    state = State()
+    state.board = [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.turn = 0
+    state.count_start = 0
+    state.count_six = 0
+
+    # Roll a 6 at start and move piece out
+    state.dice = 6
+    state.move(1)
+    # After move: not at start anymore, rolled a 6
+    assert state.is_start() is False
+    assert state.count_start == 0  # Reset because not at start
+    assert state.count_six == 1  # Incremented because rolled 6
+    assert state.turn == 0  # Still Red's turn (count_six > 0)
+
+    # Move another piece with 6 (bringing it out)
+    state.dice = 6
+    state.move(2)
+    assert state.count_six == 2
+    assert state.turn == 0
+
+    # Third 6 - count_six wraps to 0, turn advances
+    state.dice = 6
+    state.move(3)
+    assert state.count_six == 0
+    assert state.turn == 1  # Green's turn
