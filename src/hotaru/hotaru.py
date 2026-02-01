@@ -232,5 +232,7 @@ def cli() -> None:
             elif query[0] == "new":
                 state = State()
                 break
+            elif query[0] in ("quit", "exit"):
+                return
             else:
                 print("Unknown command")
