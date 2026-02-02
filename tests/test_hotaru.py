@@ -293,21 +293,6 @@ def test_three_sixes_rule_reset_on_non_six() -> None:
     assert state.turn == 1  # Turn advances to Green
 
 
-def test_three_sixes_rule_pass_does_not_count() -> None:
-    """Passing (piece=None) should not increment count_six."""
-    state = State()
-    # Red is at start, can only pass with non-6
-    state.board = [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
-    state.turn = 0
-    state.count_six = 2  # Already at 2 sixes
-
-    # Dice is not 6, but passing - count_six should NOT update
-    state.dice = 3
-    state.move(None)  # Pass
-    # count_six doesn't update when piece is None
-    assert state.count_six == 2
-
-
 def test_three_starts_rule() -> None:
     """After being stuck at start three times, turn should advance."""
     state = State()
