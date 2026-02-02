@@ -356,7 +356,7 @@ def test_three_starts_with_six_interaction() -> None:
     state = State()
     state.board = [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
     state.turn = 0
-    state.count_start = 0
+    state.count_start = 2  # Simulate having been stuck at start twice
     state.count_six = 0
 
     # Roll a 6 at start and move piece out
@@ -364,7 +364,7 @@ def test_three_starts_with_six_interaction() -> None:
     state.move(1)
     # After move: not at start anymore, rolled a 6
     assert state.is_start() is False
-    assert state.count_start == 0  # Reset because not at start
+    assert state.count_start == 0  # Reset because no longer at start
     assert state.count_six == 1  # Incremented because rolled 6
     assert state.turn == 0  # Still Red's turn (count_six > 0)
 
