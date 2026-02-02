@@ -216,11 +216,11 @@ def test_visualize_colored() -> None:
 
     colored_output = state.visualize(colored=True)
 
-    # Check that colored pieces have ANSI codes
-    assert f"[{red_bg}R1{reset}]" in colored_output
-    assert f"[{green_bg}G1{reset}]" in colored_output
-    assert f"[{blue_bg}B1{reset}]" in colored_output
-    assert f"[{yellow_bg}Y1{reset}]" in colored_output
+    # Check that colored pieces have ANSI codes (only color letter, not number)
+    assert f"[{red_bg}R{reset}1]" in colored_output
+    assert f"[{green_bg}G{reset}1]" in colored_output
+    assert f"[{blue_bg}B{reset}1]" in colored_output
+    assert f"[{yellow_bg}Y{reset}1]" in colored_output
 
     # Check that Turn label is colored
     assert f"Turn: {red_bg}R{reset}, Dice: 1" in colored_output
