@@ -427,3 +427,17 @@ def test_three_starts_with_six_interaction() -> None:
     state.move(1)
     assert state.count_six == 0
     assert state.turn == 1  # Green's turn
+
+
+def test_count_six_reset_on_pass() -> None:
+    state = State()
+    state.board = [[43, 45, 46, 47], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.turn = 0
+    state.count_six = 1
+
+    state.dice = 6
+    state.get_movables() == [None]
+    state.move(None)
+
+    assert state.count_six == 0
+    assert state.turn == 1
