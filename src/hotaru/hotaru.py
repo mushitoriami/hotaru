@@ -154,7 +154,9 @@ class State:
             for p in range(4):
                 x, y = mapping[t][self.board[t][p]]
                 if colored:
-                    table[x][y] = color_bg[t] + mapping_color[t] + color_reset + str(p + 1)
+                    table[x][y] = (
+                        color_bg[t] + mapping_color[t] + color_reset + str(p + 1)
+                    )
                 else:
                     table[x][y] = mapping_color[t] + str(p + 1)
         visualized = ""
