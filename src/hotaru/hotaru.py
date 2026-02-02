@@ -60,7 +60,12 @@ class State:
     def eval(self) -> dict[int | None, float]:
         return {move: 0 for move in self.get_movables()}
 
-    def visualize(self) -> str:
+    def visualize(self, colored: bool = True) -> str:
+        # ANSI color codes for background colors
+        # Red: white text on red bg, Green: white on green, Blue: white on blue, Yellow: black on yellow
+        color_bg = ["\033[97;41m", "\033[97;42m", "\033[97;44m", "\033[30;43m"]
+        color_reset = "\033[0m"
+
         table: list[list[None | str]] = [
             [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
             [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
@@ -148,7 +153,12 @@ class State:
         for t in range(4):
             for p in range(4):
                 x, y = mapping[t][self.board[t][p]]
-                table[x][y] = mapping_color[t] + str(p + 1)
+                if colored:
+                    table[x][y] = (
+                        color_bg[t] + mapping_color[t] + color_reset + str(p + 1)
+                    )
+                else:
+                    table[x][y] = mapping_color[t] + str(p + 1)
         visualized = ""
         for x in range(11):
             for c in table[x]:
@@ -156,11 +166,15 @@ class State:
             visualized += "\n"
         visualized += "\n"
         if self.turn is not None:
-            visualized += (
-                "Turn: " + ("R", "G", "B", "Y")[self.turn] + ", Dice: " + str(self.dice)
-            )
+            turn_label = mapping_color[self.turn]
+            if colored:
+                turn_label = color_bg[self.turn] + turn_label + color_reset
+            visualized += "Turn: " + turn_label + ", Dice: " + str(self.dice)
         elif self.winner is not None:
-            visualized += "Winner: " + ("R", "G", "B", "Y")[self.winner]
+            winner_label = mapping_color[self.winner]
+            if colored:
+                winner_label = color_bg[self.winner] + winner_label + color_reset
+            visualized += "Winner: " + winner_label
         else:
             assert False, "unreachable"
         return visualized
@@ -232,5 +246,7 @@ def cli() -> None:
             elif query[0] == "new":
                 state = State()
                 break
+            elif query[0] in ("quit", "exit"):
+                return
             else:
                 print("Unknown command")
