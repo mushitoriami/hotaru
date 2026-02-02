@@ -368,14 +368,14 @@ def test_three_starts_with_six_interaction() -> None:
     assert state.count_six == 1  # Incremented because rolled 6
     assert state.turn == 0  # Still Red's turn (count_six > 0)
 
-    # Move another piece with 6 (bringing it out)
+    # Second 6: move piece 1 again (only movable piece since others can't exit to pos 4)
     state.dice = 6
-    state.move(2)
+    state.move(1)
     assert state.count_six == 2
     assert state.turn == 0
 
     # Third 6 - count_six wraps to 0, turn advances
     state.dice = 6
-    state.move(3)
+    state.move(1)
     assert state.count_six == 0
     assert state.turn == 1  # Green's turn
