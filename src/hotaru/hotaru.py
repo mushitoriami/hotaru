@@ -1,3 +1,4 @@
+from collections.abc import Callable
 import random
 
 
@@ -192,14 +193,16 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
     return get_absolute_pos(pos1, turn1) == get_absolute_pos(pos2, turn2)
 
 
-def cli() -> None:
+def cli(
+    input_fn: Callable[[str], str] = input, print_fn: Callable[..., None] = print
+) -> None:
     state = State()
     query_previous = [""]
     while True:
         movables = state.get_movables()
-        print(state.visualize())
+        print_fn(state.visualize())
         while True:
-            query = input("> ").split()
+            query = input_fn("> ").split()
             if len(query) == 0:
                 query = query_previous
             else:
@@ -209,15 +212,15 @@ def cli() -> None:
                 if piece in movables:
                     state.move(piece)
                     break
-                print("Cannot move: " + query[1])
+                print_fn("Cannot move: " + query[1])
             elif query[0] == "pass":
                 if None in movables:
                     state.move(None)
                     break
-                print("Cannot pass")
+                print_fn("Cannot pass")
             elif query[0] == "eval":
                 scores = state.eval()
-                print(
+                print_fn(
                     "Scores | "
                     + ", ".join(
                         [
@@ -244,11 +247,11 @@ def cli() -> None:
                 if 1 <= dice <= 6:
                     state.dice = dice
                     break
-                print("Invalid dice roll: " + query[1])
+                print_fn("Invalid dice roll: " + query[1])
             elif query[0] == "new":
                 state = State()
                 break
             elif query[0] in ("quit", "exit"):
                 return
             else:
-                print("Unknown command")
+                print_fn("Unknown command")

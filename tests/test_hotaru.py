@@ -1,4 +1,6 @@
-from hotaru.hotaru import State, get_absolute_pos, is_same_pos
+import pytest
+from collections.abc import Callable
+from hotaru.hotaru import State, get_absolute_pos, is_same_pos, cli
 
 
 def test_init_board() -> None:
@@ -441,3 +443,48 @@ def test_count_six_reset_on_pass() -> None:
 
     assert state.count_six == 0
     assert state.turn == 1
+
+
+@pytest.fixture
+def run_cli() -> Callable[[list[str]], list[str]]:
+    def _run(inputs: list[str]) -> list[str]:
+        input_iter = iter(inputs)
+        outputs: list[str] = []
+
+        def mock_input(prompt: str) -> str:
+            return next(input_iter)
+
+        def mock_print(*args: object) -> None:
+            outputs.append(" ".join(str(arg) for arg in args))
+
+        cli(input_fn=mock_input, print_fn=mock_print)
+        return outputs
+
+    return _run
+
+
+def test_cli_1(run_cli: Callable[[list[str]], list[str]]) -> None:
+    outputs = run_cli(["dice 6", "move 1", "quit"])
+    assert any("Turn:" in output for output in outputs)
+    assert not any("Cannot" in output for output in outputs)
+
+
+def test_cli_2(run_cli: Callable[[list[str]], list[str]]) -> None:
+    outputs = run_cli(["dice 3", "move 1", "exit"])
+    assert any("Cannot move: 1" in output for output in outputs)
+    assert any("Turn:" in output for output in outputs)
+
+
+def test_cli_3(run_cli: Callable[[list[str]], list[str]]) -> None:
+    outputs = run_cli(["dice 3", "pass", "quit"])
+    assert not any("Cannot pass" in output for output in outputs)
+
+
+def test_cli_4(run_cli: Callable[[list[str]], list[str]]) -> None:
+    outputs = run_cli(["dice 6", "pass", "quit"])
+    assert any("Cannot pass" in output for output in outputs)
+
+
+def test_cli_5(run_cli: Callable[[list[str]], list[str]]) -> None:
+    outputs = run_cli(["invalid", "quit"])
+    assert any("Unknown command" in output for output in outputs)
