@@ -1,6 +1,8 @@
-import pytest
 from collections.abc import Callable
-from hotaru.hotaru import State, get_absolute_pos, is_same_pos, cli
+
+import pytest
+
+from hotaru.hotaru import State, cli, get_absolute_pos, is_same_pos
 
 
 def test_init_board() -> None:
