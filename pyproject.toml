@@ -1,55 +1,59 @@
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = [ "poetry-core>=2,<3" ]
+
 [project]
 name = "hotaru"
 version = "0.1.0"
 description = "AI for Ludo"
-authors = [
-    {name = "Komorebi Sakuramochi",email = "komorebi_sakuramochi@icloud.com"}
-]
-license = {text = "MIT"}
 readme = "README.md"
+license = { text = "MIT" }
+authors = [
+  { name = "Komorebi Sakuramochi", email = "komorebi_sakuramochi@icloud.com" },
+]
 requires-python = ">=3.12"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
 dependencies = [
 ]
-scripts = {hotaru = "hotaru.hotaru:cli"}
+scripts = { hotaru = "hotaru.hotaru:cli" }
 
 [dependency-groups]
 dev = [
-    "pytest (>=9.0.2,<10.0.0)",
-    "ruff (>=0.14.11,<0.15.0)",
-    "mypy (>=1.19.1,<2.0.0)"
+  "mypy>=1.19.1,<2",
+  "pyproject-fmt>=2.12.1,<3",
+  "pytest>=9.0.2,<10",
+  "ruff>=0.14.11,<0.15",
 ]
 
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-
-[tool.mypy]
-strict = true
-
-
 [tool.tox]
-requires = ["tox>=4.19"]
-env_list = ["3.14", "3.13", "3.12", "type", "lint", "format"]
-
-
-[tool.tox.env.lint]
-description = "Lint"
-commands = [["ruff", "check"]]
-
+requires = [ "tox>=4.19" ]
+env_list = [ "3.14", "3.13", "3.12", "type", "lint", "format", "format_pyproject" ]
 
 [tool.tox.env.format]
 description = "Check format"
-commands = [["ruff", "format", "--check"]]
+commands = [ [ "ruff", "format", "--check" ] ]
 
+[tool.tox.env.format_pyproject]
+description = "Check pyproject.toml format"
+commands = [ [ "pyproject-fmt", "--check", "pyproject.toml" ] ]
+
+[tool.tox.env.lint]
+description = "Lint"
+commands = [ [ "ruff", "check" ] ]
 
 [tool.tox.env.type]
 description = "Run type checks"
-commands = [["mypy", "."]]
-
+commands = [ [ "mypy", "." ] ]
 
 [tool.tox.env_run_base]
 description = "Run tests under {base_python}"
-dependency_groups = ["dev"]
-commands = [["pytest"]]
+dependency_groups = [ "dev" ]
+commands = [ [ "pytest" ] ]
+
+[tool.mypy]
+strict = true
