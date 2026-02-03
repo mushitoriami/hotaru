@@ -48,6 +48,8 @@ class State:
             self.board[self.turn][piece - 1] = move_to
         if piece is not None:
             self.count_six = (self.count_six + 1) % 3 if self.dice == 6 else 0
+        else:
+            self.count_six = 0
         self.count_start = (self.count_start + 1) % 3 if self.is_start() else 0
         if self.turn is not None:
             if self.is_end():
