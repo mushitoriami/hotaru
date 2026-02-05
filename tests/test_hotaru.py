@@ -1,6 +1,8 @@
-import pytest
 from collections.abc import Callable
-from hotaru.hotaru import State, get_absolute_pos, is_same_pos, cli
+
+import pytest
+
+from hotaru.hotaru import State, cli, get_absolute_pos, is_same_pos
 
 
 def test_init_board() -> None:
@@ -438,7 +440,7 @@ def test_count_six_reset_on_pass() -> None:
     state.count_six = 1
 
     state.dice = 6
-    state.get_movables() == [None]
+    assert state.get_movables() == [None]
     state.move(None)
 
     assert state.count_six == 0

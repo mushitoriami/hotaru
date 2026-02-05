@@ -1,10 +1,10 @@
-from collections.abc import Callable
 import random
+from collections.abc import Callable
 
 
 class State:
     def __init__(self) -> None:
-        self.board = [[i for i in range(4)] for _ in range(4)]
+        self.board = [list(range(4)) for _ in range(4)]
         self.turn: int | None = 0
         self.winner: int | None = None
         self.dice = random.randint(1, 6)
@@ -61,11 +61,9 @@ class State:
                 self.dice = random.randint(1, 6)
 
     def eval(self) -> dict[int | None, float]:
-        return {move: 0 for move in self.get_movables()}
+        return dict.fromkeys(self.get_movables(), 0)
 
     def visualize(self, colored: bool = True) -> str:
-        # ANSI color codes for background colors
-        # Red: white text on red bg, Green: white on green, Blue: white on blue, Yellow: black on yellow
         color_bg = ["\033[97;41m", "\033[97;42m", "\033[97;44m", "\033[30;43m"]
         color_reset = "\033[0m"
 
