@@ -440,7 +440,7 @@ def test_count_six_reset_on_pass() -> None:
     state.count_six = 1
 
     state.dice = 6
-    state.get_movables() == [None]
+    assert state.get_movables() == [None]
     state.move(None)
 
     assert state.count_six == 0
