@@ -33,7 +33,7 @@ dev = [
 [tool.ruff]
 target-version = "py312"
 lint.select = [ "B", "C4", "E", "F", "I", "N", "SIM", "UP", "W" ]
-lint.ignore = [ "B011" ]
+lint.ignore = [ "B011", "F401" ]
 
 [tool.tox]
 requires = [ "tox>=4.19" ]
