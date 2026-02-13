@@ -2,7 +2,7 @@ from collections.abc import Callable
 
 import pytest
 
-from hotaru.hotaru import State, cli, get_absolute_pos, is_same_pos
+from hotaru.hotaru import State, cli, get_absolute_pos, is_same_pos, random_evaluator
 
 
 def test_init_board() -> None:
@@ -38,7 +38,7 @@ def test_board_0() -> None:
         + "\n"
         + "Turn: R, Dice: 1"
     )
-    assert state.eval() == {None: 0}
+    assert random_evaluator.eval(state) == {None: 0}
 
 
 def test_board_1() -> None:
@@ -71,7 +71,7 @@ def test_board_1() -> None:
         + "\n"
         + "Turn: G, Dice: 5"
     )
-    assert state.eval() == {None: 0}
+    assert random_evaluator.eval(state) == {None: 0}
 
 
 def test_board_2() -> None:
@@ -104,7 +104,7 @@ def test_board_2() -> None:
         + "\n"
         + "Turn: R, Dice: 5"
     )
-    assert state.eval() == {1: 0, 2: 0}
+    assert random_evaluator.eval(state) == {1: 0, 2: 0}
 
 
 def test_board_3() -> None:
@@ -137,7 +137,7 @@ def test_board_3() -> None:
         + "\n"
         + "Turn: G, Dice: 5"
     )
-    assert state.eval() == {2: 0}
+    assert random_evaluator.eval(state) == {2: 0}
 
 
 def test_board_4() -> None:
@@ -170,7 +170,7 @@ def test_board_4() -> None:
         + "\n"
         + "Turn: R, Dice: 3"
     )
-    assert state.eval() == {1: 0, 2: 0, 3: 0}
+    assert random_evaluator.eval(state) == {1: 0, 2: 0, 3: 0}
 
 
 def test_board_5() -> None:
@@ -203,7 +203,7 @@ def test_board_5() -> None:
         + "\n"
         + "Turn: G, Dice: 4"
     )
-    assert state.eval() == {1: 0, 2: 0, 4: 0}
+    assert random_evaluator.eval(state) == {1: 0, 2: 0, 4: 0}
 
 
 def test_get_absolute_pos() -> None:
