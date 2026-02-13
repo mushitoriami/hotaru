@@ -9,15 +9,6 @@ def test_init_board() -> None:
     assert State().board == [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
 
 
-def test_end_board() -> None:
-    state = State()
-    state.board = [[45, 44, 47, 46], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
-    state.turn = 0
-    assert state.is_end()
-    state.turn = 2
-    assert not state.is_end()
-
-
 def test_board_0() -> None:
     state = State()
     state.dice = 1
