@@ -1,4 +1,5 @@
 import random
+import readline
 from collections.abc import Callable
 
 
