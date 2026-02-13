@@ -2,7 +2,14 @@ from collections.abc import Callable
 
 import pytest
 
-from hotaru.hotaru import RandomEvaluator, State, cli, get_absolute_pos, is_same_pos
+from hotaru.hotaru import (
+    RandomEvaluator,
+    State,
+    autoplay,
+    cli,
+    get_absolute_pos,
+    is_same_pos,
+)
 
 
 def test_init_board() -> None:
@@ -481,3 +488,18 @@ def test_cli_4(run_cli: Callable[[list[str]], list[str]]) -> None:
 def test_cli_5(run_cli: Callable[[list[str]], list[str]]) -> None:
     outputs = run_cli(["invalid", "quit"])
     assert any("Unknown command" in output for output in outputs)
+
+
+def test_autoplay(run_cli: Callable[[list[str]], list[str]]) -> None:
+    wins = [0, 0, 0, 0]
+    for _ in range(2000):
+        result = autoplay(
+            [
+                RandomEvaluator(),
+                RandomEvaluator(),
+                RandomEvaluator(),
+                RandomEvaluator(),
+            ]
+        )
+        wins[result] += 1
+    assert all(400 < win < 600 for win in wins)
