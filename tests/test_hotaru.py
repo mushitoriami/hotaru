@@ -490,7 +490,7 @@ def test_cli_5(run_cli: Callable[[list[str]], list[str]]) -> None:
     assert any("Unknown command" in output for output in outputs)
 
 
-def test_autoplay(run_cli: Callable[[list[str]], list[str]]) -> None:
+def test_autoplay_1(run_cli: Callable[[list[str]], list[str]]) -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
         result = autoplay(
@@ -503,3 +503,18 @@ def test_autoplay(run_cli: Callable[[list[str]], list[str]]) -> None:
         )
         wins[result] += 1
     assert all(400 < win < 600 for win in wins)
+
+
+def test_autoplay_2(run_cli: Callable[[list[str]], list[str]]) -> None:
+    wins = [0, 0, 0, 0]
+    for _ in range(2000):
+        result = autoplay(
+            [
+                RandomEvaluator(),
+                None,
+                RandomEvaluator(),
+                None,
+            ]
+        )
+        wins[result] += 1
+    assert wins[1] == wins[3] == 0 and 800 < wins[0] < 1200 and 800 < wins[2] < 1200

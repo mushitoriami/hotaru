@@ -198,14 +198,22 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
     return get_absolute_pos(pos1, turn1) == get_absolute_pos(pos2, turn2)
 
 
-def autoplay(evaluators: list[Evaluator]) -> int:
+def autoplay(evaluators: list[Evaluator | None]) -> int:
     state = State()
     while state.turn is not None:
-        scores = evaluators[state.turn].eval(state)
-        move = random.choice(
-            [move for move, score in scores.items() if score == max(scores.values())]
-        )
-        state.move(move)
+        evaluator = evaluators[state.turn]
+        if evaluator is None:
+            state.move(None)
+        else:
+            scores = evaluator.eval(state)
+            move = random.choice(
+                [
+                    move
+                    for move, score in scores.items()
+                    if score == max(scores.values())
+                ]
+            )
+            state.move(move)
     assert state.winner is not None
     return state.winner
 
