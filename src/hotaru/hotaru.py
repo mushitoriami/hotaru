@@ -191,9 +191,6 @@ class RandomEvaluator(Evaluator):
         return dict.fromkeys(state.get_movables(), 0)
 
 
-random_evaluator = RandomEvaluator()
-
-
 def get_absolute_pos(pos: int, turn: int) -> int:
     return (pos - 4 + turn * 10) % 40
 
@@ -207,8 +204,9 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
 def cli(
     input_fn: Callable[[str], str] = input,
     print_fn: Callable[..., None] = print,
-    evaluator: Evaluator = random_evaluator,
+    evaluator: Evaluator | None = None,
 ) -> None:
+    evaluator = evaluator or RandomEvaluator()
     state = State()
     query_previous = [""]
     while True:
