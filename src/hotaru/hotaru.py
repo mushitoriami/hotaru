@@ -14,12 +14,14 @@ class State:
             self.winner: int | None = None
             self.dice = random.randint(1, 6)
             self.count_six, self.count_start = 0, 0
+            self.previous: State | None = None
         else:
             self.board = [list(base.board[i]) for i in range(4)]
             self.turn = base.turn
             self.winner = base.winner
             self.dice = base.dice
             self.count_six, self.count_start = base.count_six, base.count_start
+            self.previous = base
 
     def is_start(self) -> bool:
         return self.turn is not None and set(self.board[self.turn]) == {0, 1, 2, 3}
@@ -289,6 +291,12 @@ def cli(
                 print_fn("Invalid dice roll: " + query[1])
             elif query[0] == "new":
                 state = State()
+                break
+            elif query[0] in ("undo"):
+                if state.previous is not None:
+                    state = state.previous
+                else:
+                    print_fn("Cannot undo")
                 break
             elif query[0] in ("quit", "exit"):
                 return

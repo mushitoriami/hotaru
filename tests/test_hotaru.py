@@ -490,6 +490,16 @@ def test_cli_5(run_cli: Callable[[list[str]], list[str]]) -> None:
     assert any("Unknown command" in output for output in outputs)
 
 
+def test_cli_6(run_cli: Callable[[list[str]], list[str]]) -> None:
+    outputs = run_cli(["undo", "quit"])
+    assert any("Cannot undo" in output for output in outputs)
+
+
+def test_cli_7(run_cli: Callable[[list[str]], list[str]]) -> None:
+    outputs = run_cli(["dice 6", "move 1", "undo", "quit"])
+    assert not any("Cannot undo" in output for output in outputs)
+
+
 def test_autoplay_1(run_cli: Callable[[list[str]], list[str]]) -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
