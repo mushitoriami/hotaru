@@ -44,7 +44,7 @@ def test_board_1() -> None:
     state.board = [[46, 1, 8, 10], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
     state.dice, state.turn = 2, 0
     assert state.get_movables() == [4]
-    state.move(4)
+    state = state.move(4)
     assert state.board == [
         [46, 1, 8, 12],
         [0, 1, 2, 3],
@@ -77,7 +77,7 @@ def test_board_2() -> None:
     state.board = [[10, 4, 2, 43], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
     state.dice, state.turn = 6, 0
     assert state.get_movables() == [1]
-    state.move(1)
+    state = state.move(1)
     assert state.board == [
         [16, 4, 2, 43],
         [0, 1, 2, 3],
@@ -110,7 +110,7 @@ def test_board_3() -> None:
     state.board = [[0, 7, 46, 15], [0, 34, 2, 3], [0, 1, 2, 3], [0, 1, 2, 19]]
     state.dice, state.turn = 2, 0
     assert state.get_movables() == [2, 4]
-    state.move(2)
+    state = state.move(2)
     assert state.board == [
         [0, 9, 46, 15],
         [0, 34, 2, 3],
@@ -143,7 +143,7 @@ def test_board_4() -> None:
     state.board = [[13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3], [0, 29, 2, 3]]
     state.dice, state.turn = 6, 0
     assert state.get_movables() == [1, 3, 4]
-    state.move(3)
+    state = state.move(3)
     assert state.board == [
         [13, 43, 4, 3],
         [0, 1, 2, 3],
@@ -176,7 +176,7 @@ def test_board_5() -> None:
     state.board = [[0, 29, 2, 3], [13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3]]
     state.dice, state.turn = 6, 1
     assert state.get_movables() == [1, 3, 4]
-    state.move(4)
+    state = state.move(4)
     assert state.board == [
         [0, 29, 2, 3],
         [13, 43, 2, 4],
@@ -300,19 +300,19 @@ def test_three_sixes_rule() -> None:
 
     # First 6: move piece, count_six becomes 1, turn stays with Red
     state.dice = 6
-    state.move(1)  # Move piece 1
+    state = state.move(1)  # Move piece 1
     assert state.count_six == 1
     assert state.turn == 0  # Still Red's turn
 
     # Second 6: move piece, count_six becomes 2, turn stays with Red
     state.dice = 6
-    state.move(1)
+    state = state.move(1)
     assert state.count_six == 2
     assert state.turn == 0  # Still Red's turn
 
     # Third 6: move piece, count_six wraps to 0, turn advances to Green
     state.dice = 6
-    state.move(1)
+    state = state.move(1)
     assert state.count_six == 0
     assert state.turn == 1  # Now Green's turn
 
@@ -326,19 +326,19 @@ def test_three_sixes_rule_reset_on_non_six() -> None:
 
     # Roll a 6, count_six becomes 1
     state.dice = 6
-    state.move(1)
+    state = state.move(1)
     assert state.count_six == 1
     assert state.turn == 0
 
     # Roll another 6, count_six becomes 2
     state.dice = 6
-    state.move(1)
+    state = state.move(1)
     assert state.count_six == 2
     assert state.turn == 0
 
     # Roll a non-6, count_six resets to 0, turn advances
     state.dice = 3
-    state.move(1)
+    state = state.move(1)
     assert state.count_six == 0
     assert state.turn == 1  # Turn advances to Green
 
@@ -354,19 +354,19 @@ def test_three_starts_rule() -> None:
     # First start: pass, count_start becomes 1, turn stays
     state.dice = 3  # Can't move without a 6
     assert state.get_movables() == [None]
-    state.move(None)
+    state = state.move(None)
     assert state.count_start == 1
     assert state.turn == 0  # Still Red's turn
 
     # Second start: pass, count_start becomes 2, turn stays
     state.dice = 2
-    state.move(None)
+    state = state.move(None)
     assert state.count_start == 2
     assert state.turn == 0  # Still Red's turn
 
     # Third start: pass, count_start wraps to 0, turn advances
     state.dice = 4
-    state.move(None)
+    state = state.move(None)
     assert state.count_start == 0
     assert state.turn == 1  # Now Green's turn
 
@@ -380,19 +380,19 @@ def test_three_starts_rule_reset_on_leaving_start() -> None:
 
     # First start: pass, count_start becomes 1
     state.dice = 3
-    state.move(None)
+    state = state.move(None)
     assert state.count_start == 1
     assert state.turn == 0
 
     # Second start: pass, count_start becomes 2
     state.dice = 2
-    state.move(None)
+    state = state.move(None)
     assert state.count_start == 2
     assert state.turn == 0
 
     # Roll a 6 and move out of start - is_start becomes False, count_start resets
     state.dice = 6
-    state.move(1)  # Move piece 1 out of start
+    state = state.move(1)  # Move piece 1 out of start
     assert state.board[0][0] == 4  # Piece moved to position 4
     assert state.is_start() is False
     assert state.count_start == 0
@@ -411,7 +411,7 @@ def test_three_starts_with_six_interaction() -> None:
 
     # Roll a 6 at start and move piece out
     state.dice = 6
-    state.move(1)
+    state = state.move(1)
     # After move: not at start anymore, rolled a 6
     assert state.is_start() is False
     assert state.count_start == 0  # Reset because no longer at start
@@ -420,13 +420,13 @@ def test_three_starts_with_six_interaction() -> None:
 
     # Second 6: move piece 1 again (only movable piece since others can't exit to pos 4)
     state.dice = 6
-    state.move(1)
+    state = state.move(1)
     assert state.count_six == 2
     assert state.turn == 0
 
     # Third 6 - count_six wraps to 0, turn advances
     state.dice = 6
-    state.move(1)
+    state = state.move(1)
     assert state.count_six == 0
     assert state.turn == 1  # Green's turn
 
@@ -439,7 +439,7 @@ def test_count_six_reset_on_pass() -> None:
 
     state.dice = 6
     assert state.get_movables() == [None]
-    state.move(None)
+    state = state.move(None)
 
     assert state.count_six == 0
     assert state.turn == 1
