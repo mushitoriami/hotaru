@@ -1,5 +1,6 @@
 import random
 import readline
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 
 
@@ -60,9 +61,6 @@ class State:
                 if self.count_six == 0 and self.count_start == 0:
                     self.turn = (self.turn + 1) % 4
                 self.dice = random.randint(1, 6)
-
-    def eval(self) -> dict[int | None, float]:
-        return dict.fromkeys(self.get_movables(), 0)
 
     def visualize(self, colored: bool = True) -> str:
         color_bg = ["\033[97;41m", "\033[97;42m", "\033[97;44m", "\033[30;43m"]
@@ -182,6 +180,17 @@ class State:
         return visualized
 
 
+class Evaluator(ABC):
+    @abstractmethod
+    def eval(self, state: State) -> dict[int | None, float]:
+        pass
+
+
+class RandomEvaluator(Evaluator):
+    def eval(self, state: State) -> dict[int | None, float]:
+        return dict.fromkeys(state.get_movables(), 0)
+
+
 def get_absolute_pos(pos: int, turn: int) -> int:
     return (pos - 4 + turn * 10) % 40
 
@@ -193,8 +202,11 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
 
 
 def cli(
-    input_fn: Callable[[str], str] = input, print_fn: Callable[..., None] = print
+    input_fn: Callable[[str], str] = input,
+    print_fn: Callable[..., None] = print,
+    evaluator: Evaluator | None = None,
 ) -> None:
+    evaluator = evaluator or RandomEvaluator()
     state = State()
     query_previous = [""]
     while True:
@@ -218,7 +230,7 @@ def cli(
                     break
                 print_fn("Cannot pass")
             elif query[0] == "eval":
-                scores = state.eval()
+                scores = evaluator.eval(state)
                 print_fn(
                     "Scores | "
                     + ", ".join(
@@ -231,7 +243,7 @@ def cli(
                     )
                 )
             elif query[0] == "auto":
-                scores = state.eval()
+                scores = evaluator.eval(state)
                 move = random.choice(
                     [
                         move
