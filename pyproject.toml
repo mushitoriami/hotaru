@@ -25,6 +25,7 @@ scripts = { hotaru = "hotaru.hotaru:cli" }
 [dependency-groups]
 dev = [
   "mypy>=1.19.1,<2",
+  "numpy>=2.4.2,<3",
   "pyproject-fmt>=2.12.1,<2.13",
   "pytest>=9.0.2,<10",
   "ruff>=0.14.11,<0.15",

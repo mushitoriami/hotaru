@@ -5,6 +5,9 @@ import readline
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 
+import numpy as np
+import numpy.typing as npt
+
 
 class State:
     def __init__(self, base: State | None = None) -> None:
@@ -194,6 +197,23 @@ class Evaluator(ABC):
     @abstractmethod
     def eval(self, state: State) -> dict[int | None, float]:
         pass
+
+
+class HotaruEvaluator(Evaluator):
+    def __init__(self) -> None:
+        self.params: npt.NDArray[np.float64] = np.load("params_midgame.npy")
+
+    def eval(self, state: State) -> dict[int | None, float]:
+        assert state.turn == 0 or state.turn == 2
+        result = {}
+        for move in state.get_movables():
+            state_next = state.move(move)
+            p = [piece * 2 for piece in state_next.board[state.turn]] + [
+                piece * 2 + 1 for piece in state_next.board[(state.turn + 2) % 4]
+            ]
+            features = [p1 * 96 * 96 + p2 * 96 + p3 for p1 in p for p2 in p for p3 in p]
+            result[move] = sum(self.params[i] for i in features)
+        return result
 
 
 class RandomEvaluator(Evaluator):
