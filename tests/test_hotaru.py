@@ -2,20 +2,18 @@ from collections.abc import Callable
 
 import pytest
 
-from hotaru.hotaru import RandomEvaluator, State, cli, get_absolute_pos, is_same_pos
+from hotaru.hotaru import (
+    RandomEvaluator,
+    State,
+    autoplay,
+    cli,
+    get_absolute_pos,
+    is_same_pos,
+)
 
 
 def test_init_board() -> None:
     assert State().board == [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
-
-
-def test_end_board() -> None:
-    state = State()
-    state.board = [[45, 44, 47, 46], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
-    state.turn = 0
-    assert state.is_end()
-    state.turn = 2
-    assert not state.is_end()
 
 
 def test_board_0() -> None:
@@ -490,3 +488,33 @@ def test_cli_4(run_cli: Callable[[list[str]], list[str]]) -> None:
 def test_cli_5(run_cli: Callable[[list[str]], list[str]]) -> None:
     outputs = run_cli(["invalid", "quit"])
     assert any("Unknown command" in output for output in outputs)
+
+
+def test_autoplay_1(run_cli: Callable[[list[str]], list[str]]) -> None:
+    wins = [0, 0, 0, 0]
+    for _ in range(2000):
+        result = autoplay(
+            [
+                RandomEvaluator(),
+                RandomEvaluator(),
+                RandomEvaluator(),
+                RandomEvaluator(),
+            ]
+        )
+        wins[result] += 1
+    assert all(400 < win < 600 for win in wins)
+
+
+def test_autoplay_2(run_cli: Callable[[list[str]], list[str]]) -> None:
+    wins = [0, 0, 0, 0]
+    for _ in range(2000):
+        result = autoplay(
+            [
+                RandomEvaluator(),
+                None,
+                RandomEvaluator(),
+                None,
+            ]
+        )
+        wins[result] += 1
+    assert wins[1] == wins[3] == 0 and 800 < wins[0] < 1200 and 800 < wins[2] < 1200

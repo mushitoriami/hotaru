@@ -15,9 +15,6 @@ class State:
     def is_start(self) -> bool:
         return self.turn is not None and set(self.board[self.turn]) == {0, 1, 2, 3}
 
-    def is_end(self) -> bool:
-        return self.turn is not None and set(self.board[self.turn]) == {44, 45, 46, 47}
-
     def get_movables(self) -> list[int | None]:
         if self.turn is None:
             return []
@@ -54,7 +51,7 @@ class State:
             self.count_six = 0
         self.count_start = (self.count_start + 1) % 3 if self.is_start() else 0
         if self.turn is not None:
-            if self.is_end():
+            if set(self.board[self.turn]) == {44, 45, 46, 47}:
                 self.winner = self.turn
                 self.turn = None
             else:
@@ -199,6 +196,26 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
     if not (4 <= pos1 <= 43 and 4 <= pos2 <= 43):
         return False
     return get_absolute_pos(pos1, turn1) == get_absolute_pos(pos2, turn2)
+
+
+def autoplay(evaluators: list[Evaluator | None]) -> int:
+    state = State()
+    while state.turn is not None:
+        evaluator = evaluators[state.turn]
+        if evaluator is None:
+            state.move(None)
+        else:
+            scores = evaluator.eval(state)
+            move = random.choice(
+                [
+                    move
+                    for move, score in scores.items()
+                    if score == max(scores.values())
+                ]
+            )
+            state.move(move)
+    assert state.winner is not None
+    return state.winner
 
 
 def cli(
