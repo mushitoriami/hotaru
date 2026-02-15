@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import random
 import readline
 from abc import ABC, abstractmethod
@@ -5,12 +7,21 @@ from collections.abc import Callable
 
 
 class State:
-    def __init__(self) -> None:
-        self.board = [list(range(4)) for _ in range(4)]
-        self.turn: int | None = 0
-        self.winner: int | None = None
-        self.dice = random.randint(1, 6)
-        self.count_six, self.count_start = 0, 0
+    def __init__(self, base: State | None = None) -> None:
+        if base is None:
+            self.board = [list(range(4)) for _ in range(4)]
+            self.turn: int | None = 0
+            self.winner: int | None = None
+            self.dice = random.randint(1, 6)
+            self.count_six, self.count_start = 0, 0
+            self.previous: State | None = None
+        else:
+            self.board = [list(base.board[i]) for i in range(4)]
+            self.turn = base.turn
+            self.winner = base.winner
+            self.dice = base.dice
+            self.count_six, self.count_start = base.count_six, base.count_start
+            self.previous = base
 
     def is_start(self) -> bool:
         return self.turn is not None and set(self.board[self.turn]) == {0, 1, 2, 3}
@@ -33,31 +44,33 @@ class State:
             moves.append(None)
         return moves
 
-    def move(self, piece: int | None) -> None:
-        if self.turn is not None and piece is not None:
+    def move(self, piece: int | None) -> State:
+        state = State(self)
+        if state.turn is not None and piece is not None:
             move_to = (
-                self.board[self.turn][piece - 1] + self.dice
-                if self.board[self.turn][piece - 1] >= 4
+                state.board[state.turn][piece - 1] + state.dice
+                if state.board[state.turn][piece - 1] >= 4
                 else 4
             )
             for t in range(4):
                 for p in range(4):
-                    if is_same_pos(move_to, self.turn, self.board[t][p], t):
-                        self.board[t][p] = p
-            self.board[self.turn][piece - 1] = move_to
+                    if is_same_pos(move_to, state.turn, state.board[t][p], t):
+                        state.board[t][p] = p
+            state.board[state.turn][piece - 1] = move_to
         if piece is not None:
-            self.count_six = (self.count_six + 1) % 3 if self.dice == 6 else 0
+            state.count_six = (state.count_six + 1) % 3 if state.dice == 6 else 0
         else:
-            self.count_six = 0
-        self.count_start = (self.count_start + 1) % 3 if self.is_start() else 0
-        if self.turn is not None:
-            if set(self.board[self.turn]) == {44, 45, 46, 47}:
-                self.winner = self.turn
-                self.turn = None
+            state.count_six = 0
+        state.count_start = (state.count_start + 1) % 3 if state.is_start() else 0
+        if state.turn is not None:
+            if set(state.board[state.turn]) == {44, 45, 46, 47}:
+                state.winner = state.turn
+                state.turn = None
             else:
-                if self.count_six == 0 and self.count_start == 0:
-                    self.turn = (self.turn + 1) % 4
-                self.dice = random.randint(1, 6)
+                if state.count_six == 0 and state.count_start == 0:
+                    state.turn = (state.turn + 1) % 4
+                state.dice = random.randint(1, 6)
+        return state
 
     def visualize(self, colored: bool = True) -> str:
         color_bg = ["\033[97;41m", "\033[97;42m", "\033[97;44m", "\033[30;43m"]
@@ -203,7 +216,7 @@ def autoplay(evaluators: list[Evaluator | None]) -> int:
     while state.turn is not None:
         evaluator = evaluators[state.turn]
         if evaluator is None:
-            state.move(None)
+            state = state.move(None)
         else:
             scores = evaluator.eval(state)
             move = random.choice(
@@ -213,7 +226,7 @@ def autoplay(evaluators: list[Evaluator | None]) -> int:
                     if score == max(scores.values())
                 ]
             )
-            state.move(move)
+            state = state.move(move)
     assert state.winner is not None
     return state.winner
 
@@ -238,12 +251,12 @@ def cli(
             if query[0] == "move":
                 piece = int(query[1])
                 if piece in movables:
-                    state.move(piece)
+                    state = state.move(piece)
                     break
                 print_fn("Cannot move: " + query[1])
             elif query[0] == "pass":
                 if None in movables:
-                    state.move(None)
+                    state = state.move(None)
                     break
                 print_fn("Cannot pass")
             elif query[0] == "eval":
@@ -278,6 +291,12 @@ def cli(
                 print_fn("Invalid dice roll: " + query[1])
             elif query[0] == "new":
                 state = State()
+                break
+            elif query[0] in ("undo"):
+                if state.previous is not None:
+                    state = state.previous
+                else:
+                    print_fn("Cannot undo")
                 break
             elif query[0] in ("quit", "exit"):
                 return
