@@ -3,6 +3,7 @@ from collections.abc import Callable
 import pytest
 
 from hotaru.hotaru import (
+    HotaruEvaluator,
     RandomEvaluator,
     State,
     autoplay,
@@ -528,3 +529,18 @@ def test_autoplay_2(run_cli: Callable[[list[str]], list[str]]) -> None:
         )
         wins[result] += 1
     assert wins[1] == wins[3] == 0 and 800 < wins[0] < 1200 and 800 < wins[2] < 1200
+
+
+def test_autoplay_3(run_cli: Callable[[list[str]], list[str]]) -> None:
+    wins = [0, 0, 0, 0]
+    for _ in range(2000):
+        result = autoplay(
+            [
+                RandomEvaluator(),
+                None,
+                HotaruEvaluator(),
+                None,
+            ]
+        )
+        wins[result] += 1
+    assert wins[1] == wins[3] == 0 and wins[0] < 600
