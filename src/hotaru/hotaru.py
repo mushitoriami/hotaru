@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import os
 import random
 import readline
+import struct
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 
@@ -193,6 +195,82 @@ class State:
         return visualized
 
 
+def in_theo(s: State) -> bool:
+    return (
+        s.board[0][0] == 47
+        or s.board[0][1] == 47
+        or s.board[0][2] == 47
+        or s.board[0][3] == 47
+    ) and (
+        s.board[2][0] == 47
+        or s.board[2][1] == 47
+        or s.board[2][2] == 47
+        or s.board[2][3] == 47
+    )
+
+
+def eval_state_theo(filename: str, state: State, turn: int) -> float:
+    return read_bin(filename, index_state(state, turn))
+
+
+def read_bin(filename: str, index: int) -> float:
+    with open(filename, "rb") as f:
+        f.seek(index * 4, os.SEEK_SET)
+        r = struct.unpack("f", f.read(4))[0]
+        assert isinstance(r, float)
+        return r
+
+
+def index_state(state: State, turn: int) -> int:
+    d = [state.board[0][0], state.board[0][1], state.board[0][2], state.board[0][3]]
+    d.sort(reverse=True)
+    if d[3] <= 3:
+        d[3] = 0
+    if d[2] <= 3:
+        d[2] = 1
+    if d[1] <= 3:
+        d[1] = 2
+    p0 = 48 - d[0] - 1
+    p1 = d[0] - d[1] - 1
+    p2 = d[1] - d[2] - 1
+    p3 = d[2] - d[3] - 1
+    d = [state.board[2][0], state.board[2][1], state.board[2][2], state.board[2][3]]
+    d.sort(reverse=True)
+    if d[3] <= 3:
+        d[3] = 0
+    if d[2] <= 3:
+        d[2] = 1
+    if d[1] <= 3:
+        d[1] = 2
+    o0 = 48 - d[0] - 1
+    o1 = d[0] - d[1] - 1
+    o2 = d[1] - d[2] - 1
+    o3 = d[2] - d[3] - 1
+    assert p0 == 0 and o0 == 0
+    a = 44
+    p = (
+        (a + 1) * (a + 2) * (a + 3) // 6
+        - (a - p1 + 1) * (a - p1 + 2) * (a - p1 + 3) // 6
+        + (a - p1 + 1) * (a - p1 + 2) // 2
+        - (a - p1 - p2 + 1) * (a - p1 - p2 + 2) // 2
+        + (a - p1 - p2 + 1)
+        - (a - p1 - p2 - p3 + 1)
+    )
+    o = (
+        (a + 1) * (a + 2) * (a + 3) // 6
+        - (a - o1 + 1) * (a - o1 + 2) * (a - o1 + 3) // 6
+        + (a - o1 + 1) * (a - o1 + 2) // 2
+        - (a - o1 - o2 + 1) * (a - o1 - o2 + 2) // 2
+        + (a - o1 - o2 + 1)
+        - (a - o1 - o2 - o3 + 1)
+    )
+    return (
+        (a + 1) * (a + 2) * (a + 3) // 6 * p + o
+        if turn == 0
+        else (a + 1) * (a + 2) * (a + 3) // 6 * o + p
+    )
+
+
 class Evaluator(ABC):
     @abstractmethod
     def eval(self, state: State) -> dict[int | None, float]:
@@ -201,7 +279,35 @@ class Evaluator(ABC):
 
 class HotaruEvaluator(Evaluator):
     def __init__(self) -> None:
-        self.params: npt.NDArray[np.float64] = np.load("params_midgame.npy")
+        self.params_midgame: npt.NDArray[np.float64] = np.load("params_midgame.npy")
+
+    def score_theo(self, s: State, turn: int) -> float:
+        return -eval_state_theo("params_endgame.dat", s, 1 if turn == 0 else 0)
+
+    def score(self, state: State, turn: int) -> float:
+        p = [piece * 2 for piece in state.board[turn]] + [
+            piece * 2 + 1 for piece in state.board[(turn + 2) % 4]
+        ]
+        features = [p1 * 96 * 96 + p2 * 96 + p3 for p1 in p for p2 in p for p3 in p]
+        r = sum(self.params_midgame[i] for i in features)
+        assert isinstance(r, float)
+        return r
+
+    def eval(self, state: State) -> dict[int | None, float]:
+        assert state.turn == 0 or state.turn == 2
+        result = {}
+        for move in state.get_movables():
+            state_next = state.move(move)
+            if in_theo(state):
+                result[move] = self.score_theo(state_next, state.turn)
+            else:
+                result[move] = self.score(state_next, state.turn)
+        return result
+
+
+class HotaruEvaluatorOld(Evaluator):
+    def __init__(self) -> None:
+        self.params_midgame: npt.NDArray[np.float64] = np.load("params_midgame.npy")
 
     def eval(self, state: State) -> dict[int | None, float]:
         assert state.turn == 0 or state.turn == 2
@@ -212,7 +318,7 @@ class HotaruEvaluator(Evaluator):
                 piece * 2 + 1 for piece in state_next.board[(state.turn + 2) % 4]
             ]
             features = [p1 * 96 * 96 + p2 * 96 + p3 for p1 in p for p2 in p for p3 in p]
-            result[move] = sum(self.params[i] for i in features)
+            result[move] = sum(self.params_midgame[i] for i in features)
         return result
 
 

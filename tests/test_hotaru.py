@@ -4,6 +4,7 @@ import pytest
 
 from hotaru.hotaru import (
     HotaruEvaluator,
+    HotaruEvaluatorOld,
     RandomEvaluator,
     State,
     autoplay,
@@ -544,3 +545,18 @@ def test_autoplay_3(run_cli: Callable[[list[str]], list[str]]) -> None:
         )
         wins[result] += 1
     assert wins[1] == wins[3] == 0 and wins[0] < 600
+
+
+def test_autoplay_4(run_cli: Callable[[list[str]], list[str]]) -> None:
+    wins = [0, 0, 0, 0]
+    for _ in range(2000):
+        result = autoplay(
+            [
+                HotaruEvaluatorOld(),
+                None,
+                HotaruEvaluator(),
+                None,
+            ]
+        )
+        wins[result] += 1
+    assert wins[1] == wins[3] == 0 and 1050 < wins[2] < 1150

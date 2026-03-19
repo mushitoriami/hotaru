@@ -2,3 +2,4 @@ poetry.lock
 uv.lock
 __pycache__
 .tox
+params_endgame.dat
