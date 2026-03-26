@@ -11,11 +11,9 @@ license = { text = "MIT" }
 authors = [
   { name = "Komorebi Sakuramochi", email = "komorebi_sakuramochi@icloud.com" },
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
@@ -32,13 +30,13 @@ dev = [
 ]
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py314"
 lint.select = [ "B", "C4", "E", "F", "I", "N", "SIM", "UP", "W" ]
 lint.ignore = [ "B011", "F401" ]
 
 [tool.tox]
 requires = [ "tox>=4.19" ]
-env_list = [ "3.14", "3.13", "3.12", "type", "lint", "format", "format_pyproject" ]
+env_list = [ "3.14", "type", "lint", "format", "format_pyproject" ]
 
 [tool.tox.env.format]
 description = "Check format"
