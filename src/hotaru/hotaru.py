@@ -6,9 +6,6 @@ import struct
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 
-import numpy as np
-import numpy.typing as npt
-
 
 class State:
     def __init__(self, base: State | None = None) -> None:
@@ -278,7 +275,8 @@ class Evaluator(ABC):
 
 class HotaruEvaluator(Evaluator):
     def __init__(self, enable_endgame: bool = False) -> None:
-        self.params_midgame: npt.NDArray[np.float64] = np.load("params_midgame.npy")
+        with open("params_midgame.dat", "rb") as f:
+            self.params_midgame = f.read()
         self.enable_endgame: bool = enable_endgame
 
     def score_theo(self, s: State, turn: int) -> float:
@@ -289,7 +287,10 @@ class HotaruEvaluator(Evaluator):
             piece * 2 + 1 for piece in state.board[(turn + 2) % 4]
         ]
         features = [p1 * 96 * 96 + p2 * 96 + p3 for p1 in p for p2 in p for p3 in p]
-        r = sum(self.params_midgame[i] for i in features)
+        r = sum(
+            struct.unpack("d", self.params_midgame[i * 8 : i * 8 + 8])[0]
+            for i in features
+        )
         assert isinstance(r, float)
         return r
 
