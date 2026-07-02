@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-import readline
+import readline  # noqa: F401
 import struct
 from abc import ABC, abstractmethod
 from collections.abc import Callable
