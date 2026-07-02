@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 
@@ -544,3 +545,21 @@ def test_autoplay_3(run_cli: Callable[[list[str]], list[str]]) -> None:
         )
         wins[result] += 1
     assert wins[1] == wins[3] == 0 and wins[0] < 600
+
+
+@pytest.mark.skipif(
+    not Path("params_endgame.dat").exists(), reason="`params_endgame.dat` not found"
+)
+def test_autoplay_4(run_cli: Callable[[list[str]], list[str]]) -> None:
+    wins = [0, 0, 0, 0]
+    for _ in range(2000):
+        result = autoplay(
+            [
+                HotaruEvaluator(),
+                None,
+                HotaruEvaluator(True),
+                None,
+            ]
+        )
+        wins[result] += 1
+    assert wins[1] == wins[3] == 0 and 1050 < wins[2] < 1150
