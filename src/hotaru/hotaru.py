@@ -402,7 +402,7 @@ def cli(
             elif query[0] == "new":
                 state = State()
                 break
-            elif query[0] in ("undo"):
+            elif query[0] in ("undo",):
                 if state.previous is not None:
                     state = state.previous
                 else:
