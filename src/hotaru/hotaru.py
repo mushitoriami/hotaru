@@ -391,7 +391,7 @@ def cli(
                         if score == max(scores.values())
                     ]
                 )
-                state.move(move)
+                state = state.move(move)
                 break
             elif query[0] == "dice":
                 dice = int(query[1])
