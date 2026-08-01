@@ -502,6 +502,13 @@ def test_cli_7(run_cli: Callable[[list[str]], list[str]]) -> None:
     assert not any("Cannot undo" in output for output in outputs)
 
 
+def test_cli_8(run_cli: Callable[[list[str]], list[str]]) -> None:
+    outputs = run_cli(["dice 6", "auto", "quit"])
+    boards = [output for output in outputs if "Turn:" in output]
+    assert len(boards) == 3
+    assert boards[1] != boards[2]
+
+
 def test_autoplay_1(run_cli: Callable[[list[str]], list[str]]) -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
