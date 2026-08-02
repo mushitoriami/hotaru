@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from hotaru.hotaru import (
+from hotaru import (
     HotaruEvaluator,
     RandomEvaluator,
     State,
