@@ -16,6 +16,11 @@ Start the interactive CLI:
 uv run hotaru
 ```
 
+By default all four seats (0-3) participate. To play with fewer than four (minimum two), pass `--players` as a comma-separated list of seat indices:
+```
+uv run hotaru --players 0,2
+```
+
 Available commands at the `>` prompt:
 - `move <piece>` — move the given piece (1-4)
 - `pass` — pass the turn when no move is available

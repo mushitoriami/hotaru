@@ -409,8 +409,8 @@ def test_count_six_reset_on_pass() -> None:
 
 
 @pytest.fixture
-def run_cli() -> Callable[[list[str]], list[str]]:
-    def _run(inputs: list[str]) -> list[str]:
+def run_cli() -> Callable[..., list[str]]:
+    def _run(inputs: list[str], argv: list[str] | None = None) -> list[str]:
         input_iter = iter(inputs)
         outputs: list[str] = []
 
@@ -420,7 +420,11 @@ def run_cli() -> Callable[[list[str]], list[str]]:
         def mock_print(*args: object) -> None:
             outputs.append(" ".join(str(arg) for arg in args))
 
-        cli(input_fn=mock_input, print_fn=mock_print)
+        cli(
+            argv=argv if argv is not None else [],
+            input_fn=mock_input,
+            print_fn=mock_print,
+        )
         return outputs
 
     return _run
@@ -468,6 +472,17 @@ def test_cli_8(run_cli: Callable[[list[str]], list[str]]) -> None:
     boards = [output for output in outputs if "Turn:" in output]
     assert len(boards) == 3
     assert boards[1] != boards[2]
+
+
+def test_cli_players_option(run_cli: Callable[..., list[str]]) -> None:
+    green_bg, reset = "\033[97;42m", "\033[0m"
+    outputs = run_cli(["quit"], argv=["--players", "1,3"])
+    assert any(f"Turn: {green_bg}G{reset}" in output for output in outputs)
+
+
+def test_cli_players_option_invalid(run_cli: Callable[..., list[str]]) -> None:
+    with pytest.raises(SystemExit):
+        run_cli(["quit"], argv=["--players", "0"])
 
 
 def test_autoplay_1(run_cli: Callable[[list[str]], list[str]]) -> None:

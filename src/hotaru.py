@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import random
 import readline  # noqa: F401
 import struct
@@ -339,10 +340,31 @@ def autoplay(evaluators: list[Evaluator | None]) -> int:
     return state.winner
 
 
+def parse_players(value: str) -> frozenset[int]:
+    try:
+        players = frozenset(int(seat) for seat in value.split(","))
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid players: {value}") from None
+    if not (players <= frozenset(range(4)) and len(players) >= 2):
+        raise argparse.ArgumentTypeError(f"invalid players: {value}")
+    return players
+
+
 def cli(
+    argv: list[str] | None = None,
     input_fn: Callable[[str], str] = input,
     print_fn: Callable[..., None] = print,
 ) -> None:
+    parser = argparse.ArgumentParser(prog="hotaru")
+    parser.add_argument(
+        "--players",
+        type=parse_players,
+        default=frozenset(range(4)),
+        help="comma-separated seat indices (0-3, at least 2) that participate,"
+        " e.g. 0,2 (default: 0,1,2,3)",
+    )
+    args = parser.parse_args(argv)
+
     enable_midgame = Path("params_midgame.dat").exists()
     enable_endgame = Path("params_endgame.dat").exists()
     evaluator: Evaluator = (
@@ -350,7 +372,7 @@ def cli(
         if enable_midgame or enable_endgame
         else RandomEvaluator()
     )
-    state = State()
+    state = State(players=args.players)
     query_previous = [""]
     while True:
         movables = state.get_movables()
@@ -403,7 +425,7 @@ def cli(
                     break
                 print_fn("Invalid dice roll: " + query[1])
             elif query[0] == "new":
-                state = State()
+                state = State(players=args.players)
                 break
             elif query[0] in ("undo",):
                 if state.previous is not None:
