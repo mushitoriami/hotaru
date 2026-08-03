@@ -263,7 +263,7 @@ class HotaruEvaluator(Evaluator):
         self.enable_endgame: bool = enable_endgame
 
     def score_theo(self, s: State, turn: int) -> float:
-        return -eval_state_theo("params_endgame.dat", s, 1 if turn == 0 else 0)
+        return 1 - eval_state_theo("params_endgame.dat", s, 1 if turn == 0 else 0)
 
     def score(self, state: State, turn: int) -> float:
         assert self.params_midgame is not None
@@ -283,7 +283,7 @@ class HotaruEvaluator(Evaluator):
         result = {}
         for move in state.get_movables():
             state_next = state.move(move)
-            if in_theo(state) and self.enable_endgame:
+            if in_theo(state_next) and self.enable_endgame:
                 result[move] = self.score_theo(state_next, state.turn)
             elif self.params_midgame is not None:
                 result[move] = self.score(state_next, state.turn)
