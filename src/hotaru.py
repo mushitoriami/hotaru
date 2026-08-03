@@ -10,21 +10,33 @@ from pathlib import Path
 
 
 class State:
-    def __init__(self, base: State | None = None) -> None:
+    def __init__(
+        self, base: State | None = None, players: frozenset[int] | None = None
+    ) -> None:
         if base is None:
+            self.players = frozenset(range(4)) if players is None else players
+            assert len(self.players) >= 2 and self.players <= frozenset(range(4))
             self.board = [list(range(4)) for _ in range(4)]
-            self.turn: int | None = 0
+            self.turn: int | None = min(self.players)
             self.winner: int | None = None
             self.dice = random.randint(1, 6)
             self.count_six, self.count_start = 0, 0
             self.previous: State | None = None
         else:
+            self.players = base.players
             self.board = [list(base.board[i]) for i in range(4)]
             self.turn = base.turn
             self.winner = base.winner
             self.dice = base.dice
             self.count_six, self.count_start = base.count_six, base.count_start
             self.previous = base
+
+    def next_turn(self, turn: int) -> int:
+        t = turn
+        while True:
+            t = (t + 1) % 4
+            if t in self.players:
+                return t
 
     def is_start(self) -> bool:
         return self.turn is not None and set(self.board[self.turn]) == {0, 1, 2, 3}
@@ -71,7 +83,7 @@ class State:
                 state.turn = None
             else:
                 if state.count_six == 0 and state.count_start == 0:
-                    state.turn = (state.turn + 1) % 4
+                    state.turn = state.next_turn(state.turn)
                 state.dice = random.randint(1, 6)
         return state
 
