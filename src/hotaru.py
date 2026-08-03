@@ -253,15 +253,20 @@ class Evaluator(ABC):
 
 
 class HotaruEvaluator(Evaluator):
-    def __init__(self, enable_endgame: bool = False) -> None:
-        with open("params_midgame.dat", "rb") as f:
-            self.params_midgame = f.read()
+    def __init__(
+        self, enable_midgame: bool = True, enable_endgame: bool = False
+    ) -> None:
+        self.params_midgame: bytes | None = None
+        if enable_midgame:
+            with open("params_midgame.dat", "rb") as f:
+                self.params_midgame = f.read()
         self.enable_endgame: bool = enable_endgame
 
     def score_theo(self, s: State, turn: int) -> float:
         return -eval_state_theo("params_endgame.dat", s, 1 if turn == 0 else 0)
 
     def score(self, state: State, turn: int) -> float:
+        assert self.params_midgame is not None
         p = [piece * 2 for piece in state.board[turn]] + [
             piece * 2 + 1 for piece in state.board[(turn + 2) % 4]
         ]
@@ -280,8 +285,10 @@ class HotaruEvaluator(Evaluator):
             state_next = state.move(move)
             if in_theo(state) and self.enable_endgame:
                 result[move] = self.score_theo(state_next, state.turn)
-            else:
+            elif self.params_midgame is not None:
                 result[move] = self.score(state_next, state.turn)
+            else:
+                result[move] = 0
         return result
 
 
@@ -324,9 +331,11 @@ def cli(
     input_fn: Callable[[str], str] = input,
     print_fn: Callable[..., None] = print,
 ) -> None:
+    enable_midgame = Path("params_midgame.dat").exists()
+    enable_endgame = Path("params_endgame.dat").exists()
     evaluator: Evaluator = (
-        HotaruEvaluator(Path("params_endgame.dat").exists())
-        if Path("params_midgame.dat").exists()
+        HotaruEvaluator(enable_midgame, enable_endgame)
+        if enable_midgame or enable_endgame
         else RandomEvaluator()
     )
     state = State()
