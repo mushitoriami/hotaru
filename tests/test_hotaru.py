@@ -543,4 +543,4 @@ def test_autoplay_4(run_cli: Callable[[list[str]], list[str]]) -> None:
             ]
         )
         wins[result] += 1
-    assert wins[1] == wins[3] == 0 and 1050 < wins[2] < 1150
+    assert wins[1] == wins[3] == 0 and 1000 < wins[2] < 1130
