@@ -6,6 +6,7 @@ import struct
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from math import comb
+from pathlib import Path
 
 
 class State:
@@ -322,9 +323,12 @@ def autoplay(evaluators: list[Evaluator | None]) -> int:
 def cli(
     input_fn: Callable[[str], str] = input,
     print_fn: Callable[..., None] = print,
-    evaluator: Evaluator | None = None,
 ) -> None:
-    evaluator = evaluator or RandomEvaluator()
+    evaluator: Evaluator = (
+        HotaruEvaluator(Path("params_endgame.dat").exists())
+        if Path("params_midgame.dat").exists()
+        else RandomEvaluator()
+    )
     state = State()
     query_previous = [""]
     while True:
