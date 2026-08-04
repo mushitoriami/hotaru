@@ -20,7 +20,6 @@ class State:
     dice: int
     count_six: int
     count_start: int
-    previous: State | None = None
 
 
 def new_state(players: frozenset[int] | None = None) -> State:
@@ -34,7 +33,6 @@ def new_state(players: frozenset[int] | None = None) -> State:
         dice=random.randint(1, 6),
         count_six=0,
         count_start=0,
-        previous=None,
     )
 
 
@@ -47,7 +45,6 @@ def copy_state(base: State) -> State:
         dice=base.dice,
         count_six=base.count_six,
         count_start=base.count_start,
-        previous=base,
     )
 
 
@@ -394,6 +391,7 @@ def cli(
         else RandomEvaluator()
     )
     state = new_state(players=args.players)
+    history: list[State] = []
     query_previous = [""]
     while True:
         movables = get_movables(state)
@@ -407,11 +405,13 @@ def cli(
             if query[0] == "move":
                 piece = int(query[1])
                 if piece in movables:
+                    history.append(state)
                     state = apply_move(state, piece)
                     break
                 print_fn("Cannot move: " + query[1])
             elif query[0] == "pass":
                 if None in movables:
+                    history.append(state)
                     state = apply_move(state, None)
                     break
                 print_fn("Cannot pass")
@@ -437,6 +437,7 @@ def cli(
                         if score == max(scores.values())
                     ]
                 )
+                history.append(state)
                 state = apply_move(state, move)
                 break
             elif query[0] == "dice":
@@ -447,10 +448,11 @@ def cli(
                 print_fn("Invalid dice roll: " + query[1])
             elif query[0] == "new":
                 state = new_state(players=args.players)
+                history = []
                 break
             elif query[0] in ("undo",):
-                if state.previous is not None:
-                    state = state.previous
+                if history:
+                    state = history.pop()
                 else:
                     print_fn("Cannot undo")
                 break
