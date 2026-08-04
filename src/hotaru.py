@@ -14,7 +14,7 @@ from pathlib import Path
 @dataclass
 class State:
     players: frozenset[int]
-    board: list[list[int]]
+    board: tuple[tuple[int, ...], ...]
     turn: int | None
     winner: int | None
     dice: int
@@ -27,7 +27,7 @@ def new_state(players: frozenset[int] | None = None) -> State:
     assert len(players) >= 2 and players <= frozenset(range(4))
     return State(
         players=players,
-        board=[list(range(4)) for _ in range(4)],
+        board=tuple(tuple(range(4)) for _ in range(4)),
         turn=min(players),
         winner=None,
         dice=random.randint(1, 6),
@@ -39,7 +39,7 @@ def new_state(players: frozenset[int] | None = None) -> State:
 def copy_state(base: State) -> State:
     return State(
         players=base.players,
-        board=[list(base.board[i]) for i in range(4)],
+        board=base.board,
         turn=base.turn,
         winner=base.winner,
         dice=base.dice,
@@ -87,11 +87,13 @@ def apply_move(state: State, piece: int | None) -> State:
             if new.board[new.turn][piece - 1] >= 4
             else 4
         )
+        board = [list(row) for row in new.board]
         for t in range(4):
             for p in range(4):
-                if is_same_pos(move_to, new.turn, new.board[t][p], t):
-                    new.board[t][p] = p
-        new.board[new.turn][piece - 1] = move_to
+                if is_same_pos(move_to, new.turn, board[t][p], t):
+                    board[t][p] = p
+        board[new.turn][piece - 1] = move_to
+        new.board = tuple(tuple(row) for row in board)
     if piece is not None:
         new.count_six = (new.count_six + 1) % 3 if new.dice == 6 else 0
     else:
@@ -250,7 +252,7 @@ def read_bin(filename: str, index: int) -> float:
         return r
 
 
-def rank_pieces(positions: list[int]) -> tuple[int, int, int]:
+def rank_pieces(positions: tuple[int, ...]) -> tuple[int, int, int]:
     d = sorted(positions, reverse=True)
     assert d[0] == 47
     for i, floor in ((3, 0), (2, 1), (1, 2)):

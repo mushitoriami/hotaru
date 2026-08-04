@@ -19,7 +19,7 @@ from hotaru import (
 
 
 def test_init_board() -> None:
-    assert new_state().board == [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    assert new_state().board == ((0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
 
 
 def test_board_0() -> None:
@@ -47,16 +47,11 @@ def test_board_0() -> None:
 
 def test_board_1() -> None:
     state = new_state()
-    state.board = [[46, 1, 8, 10], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.board = ((46, 1, 8, 10), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.dice, state.turn = 2, 0
     assert get_movables(state) == [4]
     state = apply_move(state, 4)
-    assert state.board == [
-        [46, 1, 8, 12],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-    ]
+    assert state.board == ((46, 1, 8, 12), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.dice = 5
     assert is_start(state) is True
     assert (
@@ -80,16 +75,11 @@ def test_board_1() -> None:
 
 def test_board_2() -> None:
     state = new_state()
-    state.board = [[10, 4, 2, 43], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.board = ((10, 4, 2, 43), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.dice, state.turn = 6, 0
     assert get_movables(state) == [1]
     state = apply_move(state, 1)
-    assert state.board == [
-        [16, 4, 2, 43],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-    ]
+    assert state.board == ((16, 4, 2, 43), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.dice = 5
     assert is_start(state) is False
     assert (
@@ -113,16 +103,11 @@ def test_board_2() -> None:
 
 def test_board_3() -> None:
     state = new_state()
-    state.board = [[0, 7, 46, 15], [0, 34, 2, 3], [0, 1, 2, 3], [0, 1, 2, 19]]
+    state.board = ((0, 7, 46, 15), (0, 34, 2, 3), (0, 1, 2, 3), (0, 1, 2, 19))
     state.dice, state.turn = 2, 0
     assert get_movables(state) == [2, 4]
     state = apply_move(state, 2)
-    assert state.board == [
-        [0, 9, 46, 15],
-        [0, 34, 2, 3],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-    ]
+    assert state.board == ((0, 9, 46, 15), (0, 34, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.dice = 5
     assert is_start(state) is False
     assert (
@@ -146,16 +131,11 @@ def test_board_3() -> None:
 
 def test_board_4() -> None:
     state = new_state()
-    state.board = [[13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3], [0, 29, 2, 3]]
+    state.board = ((13, 43, 2, 3), (0, 1, 34, 3), (0, 1, 2, 3), (0, 29, 2, 3))
     state.dice, state.turn = 6, 0
     assert get_movables(state) == [1, 3, 4]
     state = apply_move(state, 3)
-    assert state.board == [
-        [13, 43, 4, 3],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-        [0, 29, 2, 3],
-    ]
+    assert state.board == ((13, 43, 4, 3), (0, 1, 2, 3), (0, 1, 2, 3), (0, 29, 2, 3))
     state.dice = 3
     assert is_start(state) is False
     assert (
@@ -179,16 +159,11 @@ def test_board_4() -> None:
 
 def test_board_5() -> None:
     state = new_state()
-    state.board = [[0, 29, 2, 3], [13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3]]
+    state.board = ((0, 29, 2, 3), (13, 43, 2, 3), (0, 1, 34, 3), (0, 1, 2, 3))
     state.dice, state.turn = 6, 1
     assert get_movables(state) == [1, 3, 4]
     state = apply_move(state, 4)
-    assert state.board == [
-        [0, 29, 2, 3],
-        [13, 43, 2, 4],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-    ]
+    assert state.board == ((0, 29, 2, 3), (13, 43, 2, 4), (0, 1, 2, 3), (0, 1, 2, 3))
     state.dice = 4
     assert is_start(state) is False
     assert (
@@ -270,7 +245,7 @@ def test_visualize_colored() -> None:
 
 def test_visualize_colored_winner() -> None:
     state = new_state()
-    state.board = [[44, 45, 46, 47], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.board = ((44, 45, 46, 47), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.turn = None
     state.winner = 0
 
@@ -283,7 +258,7 @@ def test_visualize_colored_winner() -> None:
 
 def test_three_sixes_rule() -> None:
     state = new_state()
-    state.board = [[4, 5, 6, 7], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.board = ((4, 5, 6, 7), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.turn = 0
     state.count_six = 0
 
@@ -305,7 +280,7 @@ def test_three_sixes_rule() -> None:
 
 def test_three_sixes_rule_reset_on_non_six() -> None:
     state = new_state()
-    state.board = [[4, 5, 6, 7], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.board = ((4, 5, 6, 7), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.turn = 0
     state.count_six = 0
 
@@ -327,7 +302,7 @@ def test_three_sixes_rule_reset_on_non_six() -> None:
 
 def test_three_starts_rule() -> None:
     state = new_state()
-    state.board = [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.board = ((0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.turn = 0
     state.count_start = 0
 
@@ -350,7 +325,7 @@ def test_three_starts_rule() -> None:
 
 def test_three_starts_rule_reset_on_leaving_start() -> None:
     state = new_state()
-    state.board = [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.board = ((0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.turn = 0
     state.count_start = 0
 
@@ -375,7 +350,7 @@ def test_three_starts_rule_reset_on_leaving_start() -> None:
 
 def test_three_starts_with_six_interaction() -> None:
     state = new_state()
-    state.board = [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.board = ((0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.turn = 0
     state.count_start = 2
     state.count_six = 0
@@ -400,7 +375,7 @@ def test_three_starts_with_six_interaction() -> None:
 
 def test_count_six_reset_on_pass() -> None:
     state = new_state()
-    state.board = [[43, 45, 46, 47], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state.board = ((43, 45, 46, 47), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.turn = 0
     state.count_six = 1
 
