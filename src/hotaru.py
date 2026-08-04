@@ -6,7 +6,7 @@ import readline  # noqa: F401
 import struct
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from math import comb
 from pathlib import Path
 
@@ -33,18 +33,6 @@ def new_state(players: frozenset[int] | None = None) -> State:
         dice=random.randint(1, 6),
         count_six=0,
         count_start=0,
-    )
-
-
-def copy_state(base: State) -> State:
-    return State(
-        players=base.players,
-        board=base.board,
-        turn=base.turn,
-        winner=base.winner,
-        dice=base.dice,
-        count_six=base.count_six,
-        count_start=base.count_start,
     )
 
 
@@ -80,7 +68,7 @@ def get_movables(state: State) -> list[int | None]:
 
 
 def apply_move(state: State, piece: int | None) -> State:
-    new = copy_state(state)
+    new = replace(state)
     if new.turn is not None and piece is not None:
         move_to = (
             new.board[new.turn][piece - 1] + new.dice
