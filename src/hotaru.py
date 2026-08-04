@@ -99,97 +99,49 @@ def apply_move(state: State, piece: int | None) -> State:
     return new
 
 
+def _rotate_quarter(pos: tuple[int, int]) -> tuple[int, int]:
+    x, y = pos
+    return (y, 10 - x)
+
+
+def _rotate_track(points: list[tuple[int, int]], n: int) -> list[tuple[int, int]]:
+    for _ in range(n):
+        points = [_rotate_quarter(p) for p in points]
+    return points
+
+
+_BOARD_SIZE = 11
+
+_TRACK = [(10, 4), (9, 4), (8, 4), (7, 4), (6, 4)]
+_TRACK += [(6, 3), (6, 2), (6, 1), (6, 0), (5, 0)]
+_GOAL = [(9, 5), (8, 5), (7, 5), (6, 5)]
+_HOME = [(8, 1), (8, 2), (9, 1), (9, 2)]
+_TRACKS = [_rotate_track(_TRACK, t) for t in range(4)]
+_GOALS = [_rotate_track(_GOAL, t) for t in range(4)]
+_HOMES = [_rotate_track(_HOME, t) for t in range(4)]
+_MAPPING = [
+    _HOMES[t] + sum((_TRACKS[(t + i) % 4] for i in range(4)), []) + _GOALS[t]
+    for t in range(4)
+]
+
+_USABLE_CELLS = frozenset(pos for player in _MAPPING for pos in player)
+_BOARD_TEMPLATE: tuple[tuple[str | None, ...], ...] = tuple(
+    tuple(
+        "  " if (x, y) in _USABLE_CELLS else None for y in range(_BOARD_SIZE)
+    )
+    for x in range(_BOARD_SIZE)
+)
+
+
 def visualize(state: State, colored: bool = True) -> str:
     color_bg = ["\033[97;41m", "\033[97;42m", "\033[97;44m", "\033[30;43m"]
     color_reset = "\033[0m"
-
-    table: list[list[None | str]] = [
-        [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
-        [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
-        [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
-        [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
-        ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-        ["  ", "  ", "  ", "  ", "  ", None, "  ", "  ", "  ", "  ", "  "],
-        ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-        [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
-        [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
-        [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
-        [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
-    ]
-    mapping_r = [
-        (10, 4),
-        (9, 4),
-        (8, 4),
-        (7, 4),
-        (6, 4),
-        (6, 3),
-        (6, 2),
-        (6, 1),
-        (6, 0),
-        (5, 0),
-    ]
-    mapping_g = [
-        (4, 0),
-        (4, 1),
-        (4, 2),
-        (4, 3),
-        (4, 4),
-        (3, 4),
-        (2, 4),
-        (1, 4),
-        (0, 4),
-        (0, 5),
-    ]
-    mapping_b = [
-        (0, 6),
-        (1, 6),
-        (2, 6),
-        (3, 6),
-        (4, 6),
-        (4, 7),
-        (4, 8),
-        (4, 9),
-        (4, 10),
-        (5, 10),
-    ]
-    mapping_y = [
-        (6, 10),
-        (6, 9),
-        (6, 8),
-        (6, 7),
-        (6, 6),
-        (7, 6),
-        (8, 6),
-        (9, 6),
-        (10, 6),
-        (10, 5),
-    ]
-    mapping = [
-        (
-            [(8, 1), (8, 2), (9, 1), (9, 2)]
-            + (mapping_r + mapping_g + mapping_b + mapping_y)
-            + [(9, 5), (8, 5), (7, 5), (6, 5)]
-        ),
-        (
-            [(1, 1), (1, 2), (2, 1), (2, 2)]
-            + (mapping_g + mapping_b + mapping_y + mapping_r)
-            + [(5, 1), (5, 2), (5, 3), (5, 4)]
-        ),
-        (
-            [(1, 8), (1, 9), (2, 8), (2, 9)]
-            + (mapping_b + mapping_y + mapping_r + mapping_g)
-            + [(1, 5), (2, 5), (3, 5), (4, 5)]
-        ),
-        (
-            [(8, 8), (8, 9), (9, 8), (9, 9)]
-            + (mapping_y + mapping_r + mapping_g + mapping_b)
-            + [(5, 9), (5, 8), (5, 7), (5, 6)]
-        ),
-    ]
     mapping_color = ["R", "G", "B", "Y"]
+
+    table: list[list[None | str]] = [list(row) for row in _BOARD_TEMPLATE]
     for t in range(4):
         for p in range(4):
-            x, y = mapping[t][state.board[t][p]]
+            x, y = _MAPPING[t][state.board[t][p]]
             if colored:
                 table[x][y] = color_bg[t] + mapping_color[t] + color_reset + str(p + 1)
             else:
