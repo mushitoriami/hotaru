@@ -133,38 +133,40 @@ _BOARD_TEMPLATE: tuple[tuple[str | None, ...], ...] = tuple(
 )
 
 
-def visualize(state: State, colored: bool = True) -> str:
-    color_bg = ["\033[97;41m", "\033[97;42m", "\033[97;44m", "\033[30;43m"]
-    color_reset = "\033[0m"
-    mapping_color = ["R", "G", "B", "Y"]
+_COLOR_BG = ["\033[97;41m", "\033[97;42m", "\033[97;44m", "\033[30;43m"]
+_COLOR_RESET = "\033[0m"
+_PLAYER_LABELS = ["R", "G", "B", "Y"]
 
+
+def _colorize(label: str, t: int, colored: bool) -> str:
+    return _COLOR_BG[t] + label + _COLOR_RESET if colored else label
+
+
+def _render_board(state: State, colored: bool) -> str:
     table: list[list[None | str]] = [list(row) for row in _BOARD_TEMPLATE]
     for t in range(4):
         for p in range(4):
             x, y = _MAPPING[t][state.board[t][p]]
-            if colored:
-                table[x][y] = color_bg[t] + mapping_color[t] + color_reset + str(p + 1)
-            else:
-                table[x][y] = mapping_color[t] + str(p + 1)
-    visualized = ""
-    for x in range(11):
-        for c in table[x]:
-            visualized += "[" + c + "]" if c is not None else "    "
-        visualized += "\n"
-    visualized += "\n"
+            table[x][y] = _colorize(_PLAYER_LABELS[t], t, colored) + str(p + 1)
+    rows = (
+        "".join("[" + c + "]" if c is not None else "    " for c in row)
+        for row in table
+    )
+    return "\n".join(rows)
+
+
+def _render_status(state: State, colored: bool) -> str:
     if state.turn is not None:
-        turn_label = mapping_color[state.turn]
-        if colored:
-            turn_label = color_bg[state.turn] + turn_label + color_reset
-        visualized += "Turn: " + turn_label + ", Dice: " + str(state.dice)
-    elif state.winner is not None:
-        winner_label = mapping_color[state.winner]
-        if colored:
-            winner_label = color_bg[state.winner] + winner_label + color_reset
-        visualized += "Winner: " + winner_label
-    else:
-        assert False, "unreachable"
-    return visualized
+        turn_label = _colorize(_PLAYER_LABELS[state.turn], state.turn, colored)
+        return f"Turn: {turn_label}, Dice: {state.dice}"
+    if state.winner is not None:
+        winner_label = _colorize(_PLAYER_LABELS[state.winner], state.winner, colored)
+        return f"Winner: {winner_label}"
+    assert False, "unreachable"
+
+
+def visualize(state: State, colored: bool = True) -> str:
+    return _render_board(state, colored) + "\n\n" + _render_status(state, colored)
 
 
 def in_theo(s: State) -> bool:
