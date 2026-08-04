@@ -125,12 +125,6 @@ _MAPPING = [
 ]
 
 _USABLE_CELLS = frozenset(pos for player in _MAPPING for pos in player)
-_BOARD_TEMPLATE: tuple[tuple[str | None, ...], ...] = tuple(
-    tuple(
-        "  " if (x, y) in _USABLE_CELLS else None for y in range(_BOARD_SIZE)
-    )
-    for x in range(_BOARD_SIZE)
-)
 
 
 _COLOR_BG = ["\033[97;41m", "\033[97;42m", "\033[97;44m", "\033[30;43m"]
@@ -143,14 +137,21 @@ def _colorize(label: str, t: int, colored: bool) -> str:
 
 
 def _render_board(state: State, colored: bool) -> str:
-    table: list[list[None | str]] = [list(row) for row in _BOARD_TEMPLATE]
-    for t in range(4):
-        for p in range(4):
-            x, y = _MAPPING[t][state.board[t][p]]
-            table[x][y] = _colorize(_PLAYER_LABELS[t], t, colored) + str(p + 1)
+    pieces = {
+        _MAPPING[t][state.board[t][p]]: _colorize(_PLAYER_LABELS[t], t, colored) + str(p + 1)
+        for t in range(4)
+        for p in range(4)
+    }
+
+    def cell(x: int, y: int) -> str:
+        if (x, y) in pieces:
+            return "[" + pieces[(x, y)] + "]"
+        if (x, y) in _USABLE_CELLS:
+            return "[  ]"
+        return "    "
+
     rows = (
-        "".join("[" + c + "]" if c is not None else "    " for c in row)
-        for row in table
+        "".join(cell(x, y) for y in range(_BOARD_SIZE)) for x in range(_BOARD_SIZE)
     )
     return "\n".join(rows)
 
