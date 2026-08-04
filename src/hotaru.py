@@ -132,13 +132,14 @@ _COLOR_RESET = "\033[0m"
 _PLAYER_LABELS = ["R", "G", "B", "Y"]
 
 
-def _colorize(label: str, t: int, colored: bool) -> str:
+def _player_label(t: int, colored: bool) -> str:
+    label = _PLAYER_LABELS[t]
     return _COLOR_BG[t] + label + _COLOR_RESET if colored else label
 
 
 def _render_board(state: State, colored: bool) -> str:
     pieces = {
-        _MAPPING[t][state.board[t][p]]: _colorize(_PLAYER_LABELS[t], t, colored) + str(p + 1)
+        _MAPPING[t][state.board[t][p]]: _player_label(t, colored) + str(p + 1)
         for t in range(4)
         for p in range(4)
     }
@@ -158,11 +159,9 @@ def _render_board(state: State, colored: bool) -> str:
 
 def _render_status(state: State, colored: bool) -> str:
     if state.turn is not None:
-        turn_label = _colorize(_PLAYER_LABELS[state.turn], state.turn, colored)
-        return f"Turn: {turn_label}, Dice: {state.dice}"
+        return f"Turn: {_player_label(state.turn, colored)}, Dice: {state.dice}"
     if state.winner is not None:
-        winner_label = _colorize(_PLAYER_LABELS[state.winner], state.winner, colored)
-        return f"Winner: {winner_label}"
+        return f"Winner: {_player_label(state.winner, colored)}"
     assert False, "unreachable"
 
 
