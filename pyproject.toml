@@ -18,7 +18,7 @@ classifiers = [
 ]
 dependencies = [
 ]
-scripts = { hotaru = "hotaru.hotaru:cli" }
+scripts = { hotaru = "hotaru:cli" }
 
 [dependency-groups]
 dev = [
