@@ -132,36 +132,37 @@ _COLOR_RESET = "\033[0m"
 _PLAYER_LABELS = ["R", "G", "B", "Y"]
 
 
-def _player_label(t: int, colored: bool) -> str:
+def _render_player_label(t: int, colored: bool) -> str:
     label = _PLAYER_LABELS[t]
     return _COLOR_BG[t] + label + _COLOR_RESET if colored else label
 
 
+def _render_cell(x: int, y: int, pieces: dict[tuple[int, int], str]) -> str:
+    if (x, y) in pieces:
+        return "[" + pieces[(x, y)] + "]"
+    if (x, y) in _USABLE_CELLS:
+        return "[  ]"
+    return "    "
+
+
 def _render_board(state: State, colored: bool) -> str:
     pieces = {
-        _MAPPING[t][state.board[t][p]]: _player_label(t, colored) + str(p + 1)
+        _MAPPING[t][state.board[t][p]]: _render_player_label(t, colored) + str(p + 1)
         for t in range(4)
         for p in range(4)
     }
-
-    def cell(x: int, y: int) -> str:
-        if (x, y) in pieces:
-            return "[" + pieces[(x, y)] + "]"
-        if (x, y) in _USABLE_CELLS:
-            return "[  ]"
-        return "    "
-
     rows = (
-        "".join(cell(x, y) for y in range(_BOARD_SIZE)) for x in range(_BOARD_SIZE)
+        "".join(_render_cell(x, y, pieces) for y in range(_BOARD_SIZE))
+        for x in range(_BOARD_SIZE)
     )
     return "\n".join(rows)
 
 
 def _render_status(state: State, colored: bool) -> str:
     if state.turn is not None:
-        return f"Turn: {_player_label(state.turn, colored)}, Dice: {state.dice}"
+        return f"Turn: {_render_player_label(state.turn, colored)}, Dice: {state.dice}"
     if state.winner is not None:
-        return f"Winner: {_player_label(state.winner, colored)}"
+        return f"Winner: {_render_player_label(state.winner, colored)}"
     assert False, "unreachable"
 
 
