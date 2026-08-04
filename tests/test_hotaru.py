@@ -500,7 +500,7 @@ def test_autoplay_2(run_cli: Callable[[list[str]], list[str]]) -> None:
 def test_hotaru_evaluator_endgame_only_outside_theo() -> None:
     state = new_state()
     state.dice = 1
-    evaluator = HotaruEvaluator(enable_midgame=False, enable_endgame=True)
+    evaluator = HotaruEvaluator(endgame_params=Path("params_endgame.dat"))
     assert evaluator.eval(state) == dict.fromkeys(get_movables(state), 0)
 
 
@@ -514,7 +514,7 @@ def test_autoplay_3(run_cli: Callable[[list[str]], list[str]]) -> None:
             [
                 RandomEvaluator(),
                 None,
-                HotaruEvaluator(),
+                HotaruEvaluator(midgame_params=Path("params_midgame.dat")),
                 None,
             ]
         )
@@ -533,9 +533,12 @@ def test_autoplay_4(run_cli: Callable[[list[str]], list[str]]) -> None:
     for _ in range(2000):
         result = autoplay(
             [
-                HotaruEvaluator(),
+                HotaruEvaluator(midgame_params=Path("params_midgame.dat")),
                 None,
-                HotaruEvaluator(enable_endgame=True),
+                HotaruEvaluator(
+                    midgame_params=Path("params_midgame.dat"),
+                    endgame_params=Path("params_endgame.dat"),
+                ),
                 None,
             ]
         )
