@@ -18,13 +18,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v9
       with:
         python-version: 3.14
-    - name: Install tox
-      run: |
-        pip install -U pip
-        pip install -U tox
     - name: Run tox
-      run: tox -e ${{ matrix.env }}
+      run: uvx --with tox-uv tox -e ${{ matrix.env }}
