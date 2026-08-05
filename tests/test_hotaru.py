@@ -1,20 +1,20 @@
+import mmap
 from collections.abc import Callable
 from dataclasses import replace
-from pathlib import Path
 
 import pytest
 
 from hotaru import (
-    HotaruEvaluator,
-    RandomEvaluator,
     apply_move,
     autoplay,
     cli,
     get_absolute_pos,
     get_movables,
+    hotaru_evaluator,
     is_same_pos,
     is_start,
     new_state,
+    random_evaluator,
     visualize,
 )
 
@@ -42,7 +42,7 @@ def test_board_0() -> None:
         + "\n"
         + "Turn: R, Dice: 1"
     )
-    assert RandomEvaluator().eval(state) == {None: 0}
+    assert random_evaluator(state) == {None: 0}
 
 
 def test_board_1() -> None:
@@ -73,7 +73,7 @@ def test_board_1() -> None:
         + "\n"
         + "Turn: G, Dice: 5"
     )
-    assert RandomEvaluator().eval(state) == {None: 0}
+    assert random_evaluator(state) == {None: 0}
 
 
 def test_board_2() -> None:
@@ -104,7 +104,7 @@ def test_board_2() -> None:
         + "\n"
         + "Turn: R, Dice: 5"
     )
-    assert RandomEvaluator().eval(state) == {1: 0, 2: 0}
+    assert random_evaluator(state) == {1: 0, 2: 0}
 
 
 def test_board_3() -> None:
@@ -135,7 +135,7 @@ def test_board_3() -> None:
         + "\n"
         + "Turn: G, Dice: 5"
     )
-    assert RandomEvaluator().eval(state) == {2: 0}
+    assert random_evaluator(state) == {2: 0}
 
 
 def test_board_4() -> None:
@@ -166,7 +166,7 @@ def test_board_4() -> None:
         + "\n"
         + "Turn: R, Dice: 3"
     )
-    assert RandomEvaluator().eval(state) == {1: 0, 2: 0, 3: 0}
+    assert random_evaluator(state) == {1: 0, 2: 0, 3: 0}
 
 
 def test_board_5() -> None:
@@ -197,7 +197,7 @@ def test_board_5() -> None:
         + "\n"
         + "Turn: G, Dice: 4"
     )
-    assert RandomEvaluator().eval(state) == {1: 0, 2: 0, 4: 0}
+    assert random_evaluator(state) == {1: 0, 2: 0, 4: 0}
 
 
 def test_get_absolute_pos() -> None:
@@ -497,10 +497,10 @@ def test_autoplay_1(run_cli: Callable[[list[str]], list[str]]) -> None:
     for _ in range(2000):
         result = autoplay(
             [
-                RandomEvaluator(),
-                RandomEvaluator(),
-                RandomEvaluator(),
-                RandomEvaluator(),
+                random_evaluator,
+                random_evaluator,
+                random_evaluator,
+                random_evaluator,
             ]
         )
         wins[result] += 1
@@ -512,9 +512,9 @@ def test_autoplay_2(run_cli: Callable[[list[str]], list[str]]) -> None:
     for _ in range(2000):
         result = autoplay(
             [
-                RandomEvaluator(),
+                random_evaluator,
                 None,
-                RandomEvaluator(),
+                random_evaluator,
                 None,
             ]
         )
@@ -523,23 +523,24 @@ def test_autoplay_2(run_cli: Callable[[list[str]], list[str]]) -> None:
 
 
 def test_hotaru_evaluator_endgame_only_outside_theo(
-    endgame_params_path: Path,
+    endgame_params: mmap.mmap,
 ) -> None:
     state = replace(new_state(), dice=1)
-    evaluator = HotaruEvaluator(endgame_params=endgame_params_path)
-    assert evaluator.eval(state) == dict.fromkeys(get_movables(state), 0)
+    assert hotaru_evaluator(state, None, endgame_params) == dict.fromkeys(
+        get_movables(state), 0
+    )
 
 
 def test_autoplay_3(
-    run_cli: Callable[[list[str]], list[str]], midgame_params_path: Path
+    run_cli: Callable[[list[str]], list[str]], midgame_params: bytes
 ) -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
         result = autoplay(
             [
-                RandomEvaluator(),
+                random_evaluator,
                 None,
-                HotaruEvaluator(midgame_params=midgame_params_path),
+                lambda state: hotaru_evaluator(state, midgame_params, None),
                 None,
             ]
         )
@@ -549,19 +550,16 @@ def test_autoplay_3(
 
 def test_autoplay_4(
     run_cli: Callable[[list[str]], list[str]],
-    midgame_params_path: Path,
-    endgame_params_path: Path,
+    midgame_params: bytes,
+    endgame_params: mmap.mmap,
 ) -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
         result = autoplay(
             [
-                HotaruEvaluator(midgame_params=midgame_params_path),
+                lambda state: hotaru_evaluator(state, midgame_params, None),
                 None,
-                HotaruEvaluator(
-                    midgame_params=midgame_params_path,
-                    endgame_params=endgame_params_path,
-                ),
+                lambda state: hotaru_evaluator(state, midgame_params, endgame_params),
                 None,
             ]
         )
