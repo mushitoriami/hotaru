@@ -5,20 +5,18 @@ Rules are based on the Ludo implementation used on [PlayOK](https://playok.com/e
 
 ## Installation
 ```
-git clone https://github.com/mushitoriami/hotaru.git
-cd hotaru
-uv sync
+uv tool install git+https://github.com/mushitoriami/hotaru.git
 ```
 
 ## Usage
 Start the interactive CLI:
 ```
-uv run hotaru
+hotaru
 ```
 
 By default all four seats (0-3) participate. To play with fewer than four (minimum two), pass `--players` as a comma-separated list of seat indices:
 ```
-uv run hotaru --players 0,2
+hotaru --players 0,2
 ```
 
 Available commands at the `>` prompt:
