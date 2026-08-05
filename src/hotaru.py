@@ -238,11 +238,11 @@ def index_state(state: State, turn: int) -> int:
 Evaluator = Callable[[State], dict[int | None, float]]
 
 
-def score_theo(params_endgame: mmap.mmap, s: State, turn: int) -> float:
-    return 1 - 2 * eval_state_theo(params_endgame, s, 1 if turn == 0 else 0)
-
-
-def score(params_midgame: bytes, state: State, turn: int) -> float:
+def score_midgame(
+    params_midgame: bytes | None, state: State, turn: int
+) -> float | None:
+    if params_midgame is None:
+        return None
     p = [piece * 2 for piece in state.board[turn]] + [
         piece * 2 + 1 for piece in state.board[(turn + 2) % 4]
     ]
@@ -250,6 +250,14 @@ def score(params_midgame: bytes, state: State, turn: int) -> float:
     r = sum(struct.unpack("d", params_midgame[i * 8 : i * 8 + 8])[0] for i in features)
     assert isinstance(r, float)
     return 2 * r - 1
+
+
+def score_endgame(
+    params_endgame: mmap.mmap | None, s: State, turn: int
+) -> float | None:
+    if params_endgame is None or not in_theo(s):
+        return None
+    return 1 - 2 * eval_state_theo(params_endgame, s, 1 if turn == 0 else 0)
 
 
 def hotaru_evaluator(
@@ -261,12 +269,10 @@ def hotaru_evaluator(
     result = {}
     for move in get_movables(state):
         state_next = apply_move(state, move)
-        if in_theo(state_next) and params_endgame is not None:
-            result[move] = score_theo(params_endgame, state_next, state.turn)
-        elif params_midgame is not None:
-            result[move] = score(params_midgame, state_next, state.turn)
-        else:
-            result[move] = 0
+        score = score_endgame(params_endgame, state_next, state.turn)
+        if score is None:
+            score = score_midgame(params_midgame, state_next, state.turn)
+        result[move] = score if score is not None else 0
     return result
 
 
