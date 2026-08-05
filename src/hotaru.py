@@ -241,7 +241,6 @@ class HotaruEvaluator(Evaluator):
         if endgame_params is not None:
             with open(endgame_params, "rb") as f:
                 self.params_endgame = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-        self.enable_endgame: bool = endgame_params is not None
 
     def score_theo(self, s: State, turn: int) -> float:
         assert self.params_endgame is not None
@@ -265,7 +264,7 @@ class HotaruEvaluator(Evaluator):
         result = {}
         for move in get_movables(state):
             state_next = apply_move(state, move)
-            if in_theo(state_next) and self.enable_endgame:
+            if in_theo(state_next) and self.params_endgame is not None:
                 result[move] = self.score_theo(state_next, state.turn)
             elif self.params_midgame is not None:
                 result[move] = self.score(state_next, state.turn)
