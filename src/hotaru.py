@@ -5,6 +5,7 @@ import readline  # noqa: F401
 import struct
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from math import comb
 
 
 class State:
@@ -217,54 +218,31 @@ def read_bin(filename: str, index: int) -> float:
         return r
 
 
-def index_state(state: State, turn: int) -> int:
-    d = [state.board[0][0], state.board[0][1], state.board[0][2], state.board[0][3]]
-    d.sort(reverse=True)
-    if d[3] <= 3:
-        d[3] = 0
-    if d[2] <= 3:
-        d[2] = 1
-    if d[1] <= 3:
-        d[1] = 2
-    p0 = 48 - d[0] - 1
-    p1 = d[0] - d[1] - 1
-    p2 = d[1] - d[2] - 1
-    p3 = d[2] - d[3] - 1
-    d = [state.board[2][0], state.board[2][1], state.board[2][2], state.board[2][3]]
-    d.sort(reverse=True)
-    if d[3] <= 3:
-        d[3] = 0
-    if d[2] <= 3:
-        d[2] = 1
-    if d[1] <= 3:
-        d[1] = 2
-    o0 = 48 - d[0] - 1
-    o1 = d[0] - d[1] - 1
-    o2 = d[1] - d[2] - 1
-    o3 = d[2] - d[3] - 1
-    assert p0 == 0 and o0 == 0
+def rank_pieces(positions: list[int]) -> tuple[int, int, int]:
+    d = sorted(positions, reverse=True)
+    assert d[0] == 47
+    for i, floor in ((3, 0), (2, 1), (1, 2)):
+        if d[i] <= 3:
+            d[i] = floor
+    return 46 - d[1], d[1] - d[2] - 1, d[2] - d[3] - 1
+
+
+def combination_rank(x1: int, x2: int, x3: int) -> int:
     a = 44
-    p = (
-        (a + 1) * (a + 2) * (a + 3) // 6
-        - (a - p1 + 1) * (a - p1 + 2) * (a - p1 + 3) // 6
-        + (a - p1 + 1) * (a - p1 + 2) // 2
-        - (a - p1 - p2 + 1) * (a - p1 - p2 + 2) // 2
-        + (a - p1 - p2 + 1)
-        - (a - p1 - p2 - p3 + 1)
-    )
-    o = (
-        (a + 1) * (a + 2) * (a + 3) // 6
-        - (a - o1 + 1) * (a - o1 + 2) * (a - o1 + 3) // 6
-        + (a - o1 + 1) * (a - o1 + 2) // 2
-        - (a - o1 - o2 + 1) * (a - o1 - o2 + 2) // 2
-        + (a - o1 - o2 + 1)
-        - (a - o1 - o2 - o3 + 1)
-    )
     return (
-        (a + 1) * (a + 2) * (a + 3) // 6 * p + o
-        if turn == 0
-        else (a + 1) * (a + 2) * (a + 3) // 6 * o + p
+        comb(a + 3, 3)
+        - comb(a - x1 + 3, 3)
+        + comb(a - x1 + 2, 2)
+        - comb(a - x1 - x2 + 2, 2)
+        + x3
     )
+
+
+def index_state(state: State, turn: int) -> int:
+    p = combination_rank(*rank_pieces(state.board[0]))
+    o = combination_rank(*rank_pieces(state.board[2]))
+    span = comb(47, 3)
+    return span * p + o if turn == 0 else span * o + p
 
 
 class Evaluator(ABC):
