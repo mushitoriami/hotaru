@@ -500,6 +500,13 @@ def test_autoplay_2(run_cli: Callable[[list[str]], list[str]]) -> None:
     assert wins[1] == wins[3] == 0 and 800 < wins[0] < 1200 and 800 < wins[2] < 1200
 
 
+def test_hotaru_evaluator_endgame_only_outside_theo() -> None:
+    state = State()
+    state.dice = 1
+    evaluator = HotaruEvaluator(enable_midgame=False, enable_endgame=True)
+    assert evaluator.eval(state) == dict.fromkeys(state.get_movables(), 0)
+
+
 @pytest.mark.skipif(
     not Path("params_midgame.dat").exists(), reason="`params_midgame.dat` not found"
 )
@@ -531,9 +538,9 @@ def test_autoplay_4(run_cli: Callable[[list[str]], list[str]]) -> None:
             [
                 HotaruEvaluator(),
                 None,
-                HotaruEvaluator(True),
+                HotaruEvaluator(enable_endgame=True),
                 None,
             ]
         )
         wins[result] += 1
-    assert wins[1] == wins[3] == 0 and 1050 < wins[2] < 1150
+    assert wins[1] == wins[3] == 0 and 1000 < wins[2] < 1130
