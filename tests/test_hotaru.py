@@ -42,7 +42,8 @@ def test_board_0() -> None:
         + "\n"
         + "Turn: R, Dice: 1"
     )
-    assert random_evaluator(state) == {None: 0}
+    assert get_movables(state) == [None]
+    assert random_evaluator(state) == 0
 
 
 def test_board_1() -> None:
@@ -73,7 +74,8 @@ def test_board_1() -> None:
         + "\n"
         + "Turn: G, Dice: 5"
     )
-    assert random_evaluator(state) == {None: 0}
+    assert get_movables(state) == [None]
+    assert random_evaluator(state) == 0
 
 
 def test_board_2() -> None:
@@ -104,7 +106,8 @@ def test_board_2() -> None:
         + "\n"
         + "Turn: R, Dice: 5"
     )
-    assert random_evaluator(state) == {1: 0, 2: 0}
+    assert get_movables(state) == [1, 2]
+    assert random_evaluator(state) == 0
 
 
 def test_board_3() -> None:
@@ -135,7 +138,8 @@ def test_board_3() -> None:
         + "\n"
         + "Turn: G, Dice: 5"
     )
-    assert random_evaluator(state) == {2: 0}
+    assert get_movables(state) == [2]
+    assert random_evaluator(state) == 0
 
 
 def test_board_4() -> None:
@@ -166,7 +170,8 @@ def test_board_4() -> None:
         + "\n"
         + "Turn: R, Dice: 3"
     )
-    assert random_evaluator(state) == {1: 0, 2: 0, 3: 0}
+    assert get_movables(state) == [1, 2, 3]
+    assert random_evaluator(state) == 0
 
 
 def test_board_5() -> None:
@@ -197,7 +202,8 @@ def test_board_5() -> None:
         + "\n"
         + "Turn: G, Dice: 4"
     )
-    assert random_evaluator(state) == {1: 0, 2: 0, 4: 0}
+    assert get_movables(state) == [1, 2, 4]
+    assert random_evaluator(state) == 0
 
 
 def test_get_absolute_pos() -> None:
@@ -526,9 +532,7 @@ def test_hotaru_evaluator_endgame_only_outside_theo(
     endgame_params: mmap.mmap,
 ) -> None:
     state = replace(new_state(), dice=1)
-    assert hotaru_evaluator(state, None, endgame_params) == dict.fromkeys(
-        get_movables(state), 0
-    )
+    assert hotaru_evaluator(state, None, endgame_params) == 0
 
 
 def test_autoplay_3(

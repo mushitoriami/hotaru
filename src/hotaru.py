@@ -235,7 +235,7 @@ def index_state(state: State, turn: int) -> int:
     return span * p + o if turn == 0 else span * o + p
 
 
-Evaluator = Callable[[State], dict[int | None, float]]
+Evaluator = Callable[[State], float]
 
 
 def score_midgame(
@@ -264,20 +264,16 @@ def hotaru_evaluator(
     state: State,
     params_midgame: bytes | None,
     params_endgame: mmap.mmap | None,
-) -> dict[int | None, float]:
+) -> float:
     assert state.turn == 0 or state.turn == 2
-    result = {}
-    for move in get_movables(state):
-        state_next = apply_move(state, move)
-        score = score_endgame(params_endgame, state_next, state.turn)
-        if score is None:
-            score = score_midgame(params_midgame, state_next, state.turn)
-        result[move] = score if score is not None else 0
-    return result
+    score = score_endgame(params_endgame, state, state.turn)
+    if score is None:
+        score = score_midgame(params_midgame, state, state.turn)
+    return score if score is not None else 0
 
 
-def random_evaluator(state: State) -> dict[int | None, float]:
-    return dict.fromkeys(get_movables(state), 0)
+def random_evaluator(state: State) -> float:
+    return 0
 
 
 def get_absolute_pos(pos: int, turn: int) -> int:
@@ -290,6 +286,17 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
     return get_absolute_pos(pos1, turn1) == get_absolute_pos(pos2, turn2)
 
 
+def choose_move(state: State, evaluator: Evaluator) -> int | None:
+    scores = {
+        move: evaluator(replace(apply_move(state, move), turn=state.turn))
+        for move in get_movables(state)
+    }
+    best_score = max(scores.values())
+    return random.choice(
+        [move for move, score in scores.items() if score == best_score]
+    )
+
+
 def autoplay(evaluators: list[Evaluator | None]) -> int:
     state = new_state()
     while state.turn is not None:
@@ -297,14 +304,7 @@ def autoplay(evaluators: list[Evaluator | None]) -> int:
         if evaluator is None:
             state = apply_move(state, None)
         else:
-            scores = evaluator(state)
-            move = random.choice(
-                [
-                    move
-                    for move, score in scores.items()
-                    if score == max(scores.values())
-                ]
-            )
+            move = choose_move(state, evaluator)
             state = apply_move(state, move)
     assert state.winner is not None
     return state.winner
@@ -337,15 +337,13 @@ def cli(
         "--midgame-params",
         type=Path,
         default=None,
-        help="path to the midgame parameters file"
-        " (enables midgame scoring if given)",
+        help="path to the midgame parameters file (enables midgame scoring if given)",
     )
     parser.add_argument(
         "--endgame-params",
         type=Path,
         default=None,
-        help="path to the endgame parameters file"
-        " (enables endgame lookups if given)",
+        help="path to the endgame parameters file (enables endgame lookups if given)",
     )
     args = parser.parse_args(argv)
 
@@ -389,14 +387,7 @@ def cli(
                     break
                 print_fn("Cannot pass")
             elif query[0] == "auto":
-                scores = evaluator(state)
-                move = random.choice(
-                    [
-                        move
-                        for move, score in scores.items()
-                        if score == max(scores.values())
-                    ]
-                )
+                move = choose_move(state, evaluator)
                 history.append(state)
                 state = apply_move(state, move)
                 break
