@@ -392,19 +392,6 @@ def cli(
                     state = apply_move(state, None)
                     break
                 print_fn("Cannot pass")
-            elif query[0] == "eval":
-                scores = evaluator.eval(state)
-                print_fn(
-                    "Scores | "
-                    + ", ".join(
-                        [
-                            (str(move) if move is not None else "Pass")
-                            + ": "
-                            + str(score)
-                            for move, score in scores.items()
-                        ]
-                    )
-                )
             elif query[0] == "auto":
                 scores = evaluator.eval(state)
                 move = random.choice(
