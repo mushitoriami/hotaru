@@ -1,196 +1,217 @@
 from __future__ import annotations
 
+import argparse
 import random
 import readline  # noqa: F401
 import struct
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from dataclasses import dataclass, replace
 from math import comb
 from pathlib import Path
 
 
+@dataclass
 class State:
-    def __init__(self, base: State | None = None) -> None:
-        if base is None:
-            self.board = [list(range(4)) for _ in range(4)]
-            self.turn: int | None = 0
-            self.winner: int | None = None
-            self.dice = random.randint(1, 6)
-            self.count_six, self.count_start = 0, 0
-            self.previous: State | None = None
+    players: frozenset[int]
+    board: tuple[tuple[int, ...], ...]
+    turn: int | None
+    winner: int | None
+    dice: int
+    count_six: int
+    count_start: int
+
+
+def new_state(players: frozenset[int] | None = None) -> State:
+    players = frozenset(range(4)) if players is None else players
+    assert len(players) >= 2 and players <= frozenset(range(4))
+    return State(
+        players=players,
+        board=tuple(tuple(range(4)) for _ in range(4)),
+        turn=min(players),
+        winner=None,
+        dice=random.randint(1, 6),
+        count_six=0,
+        count_start=0,
+    )
+
+
+def next_turn(state: State, turn: int) -> int:
+    t = turn
+    while True:
+        t = (t + 1) % 4
+        if t in state.players:
+            return t
+
+
+def is_start(state: State) -> bool:
+    return state.turn is not None and set(state.board[state.turn]) == {0, 1, 2, 3}
+
+
+def get_movables(state: State) -> list[int | None]:
+    if state.turn is None:
+        return []
+    moves: list[int | None] = []
+    for i in range(4):
+        move_from = state.board[state.turn][i]
+        if move_from >= 4:
+            move_to = move_from + state.dice
+        elif state.dice == 6:
+            move_to = 4
         else:
-            self.board = [list(base.board[i]) for i in range(4)]
-            self.turn = base.turn
-            self.winner = base.winner
-            self.dice = base.dice
-            self.count_six, self.count_start = base.count_six, base.count_start
-            self.previous = base
+            continue
+        if move_to <= 47 and move_to not in state.board[state.turn]:
+            moves.append(i + 1)
+    if len(moves) == 0:
+        moves.append(None)
+    return moves
 
-    def is_start(self) -> bool:
-        return self.turn is not None and set(self.board[self.turn]) == {0, 1, 2, 3}
 
-    def get_movables(self) -> list[int | None]:
-        if self.turn is None:
-            return []
-        moves: list[int | None] = []
-        for i in range(4):
-            move_from = self.board[self.turn][i]
-            if move_from >= 4:
-                move_to = move_from + self.dice
-            elif self.dice == 6:
-                move_to = 4
-            else:
-                continue
-            if move_to <= 47 and move_to not in self.board[self.turn]:
-                moves.append(i + 1)
-        if len(moves) == 0:
-            moves.append(None)
-        return moves
-
-    def move(self, piece: int | None) -> State:
-        state = State(self)
-        if state.turn is not None and piece is not None:
-            move_to = (
-                state.board[state.turn][piece - 1] + state.dice
-                if state.board[state.turn][piece - 1] >= 4
-                else 4
-            )
-            for t in range(4):
-                for p in range(4):
-                    if is_same_pos(move_to, state.turn, state.board[t][p], t):
-                        state.board[t][p] = p
-            state.board[state.turn][piece - 1] = move_to
-        if piece is not None:
-            state.count_six = (state.count_six + 1) % 3 if state.dice == 6 else 0
-        else:
-            state.count_six = 0
-        state.count_start = (state.count_start + 1) % 3 if state.is_start() else 0
-        if state.turn is not None:
-            if set(state.board[state.turn]) == {44, 45, 46, 47}:
-                state.winner = state.turn
-                state.turn = None
-            else:
-                if state.count_six == 0 and state.count_start == 0:
-                    state.turn = (state.turn + 1) % 4
-                state.dice = random.randint(1, 6)
-        return state
-
-    def visualize(self, colored: bool = True) -> str:
-        color_bg = ["\033[97;41m", "\033[97;42m", "\033[97;44m", "\033[30;43m"]
-        color_reset = "\033[0m"
-
-        table: list[list[None | str]] = [
-            [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
-            [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
-            [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
-            [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
-            ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-            ["  ", "  ", "  ", "  ", "  ", None, "  ", "  ", "  ", "  ", "  "],
-            ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-            [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
-            [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
-            [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
-            [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
-        ]
-        mapping_r = [
-            (10, 4),
-            (9, 4),
-            (8, 4),
-            (7, 4),
-            (6, 4),
-            (6, 3),
-            (6, 2),
-            (6, 1),
-            (6, 0),
-            (5, 0),
-        ]
-        mapping_g = [
-            (4, 0),
-            (4, 1),
-            (4, 2),
-            (4, 3),
-            (4, 4),
-            (3, 4),
-            (2, 4),
-            (1, 4),
-            (0, 4),
-            (0, 5),
-        ]
-        mapping_b = [
-            (0, 6),
-            (1, 6),
-            (2, 6),
-            (3, 6),
-            (4, 6),
-            (4, 7),
-            (4, 8),
-            (4, 9),
-            (4, 10),
-            (5, 10),
-        ]
-        mapping_y = [
-            (6, 10),
-            (6, 9),
-            (6, 8),
-            (6, 7),
-            (6, 6),
-            (7, 6),
-            (8, 6),
-            (9, 6),
-            (10, 6),
-            (10, 5),
-        ]
-        mapping = [
-            (
-                [(8, 1), (8, 2), (9, 1), (9, 2)]
-                + (mapping_r + mapping_g + mapping_b + mapping_y)
-                + [(9, 5), (8, 5), (7, 5), (6, 5)]
-            ),
-            (
-                [(1, 1), (1, 2), (2, 1), (2, 2)]
-                + (mapping_g + mapping_b + mapping_y + mapping_r)
-                + [(5, 1), (5, 2), (5, 3), (5, 4)]
-            ),
-            (
-                [(1, 8), (1, 9), (2, 8), (2, 9)]
-                + (mapping_b + mapping_y + mapping_r + mapping_g)
-                + [(1, 5), (2, 5), (3, 5), (4, 5)]
-            ),
-            (
-                [(8, 8), (8, 9), (9, 8), (9, 9)]
-                + (mapping_y + mapping_r + mapping_g + mapping_b)
-                + [(5, 9), (5, 8), (5, 7), (5, 6)]
-            ),
-        ]
-        mapping_color = ["R", "G", "B", "Y"]
+def apply_move(state: State, piece: int | None) -> State:
+    new = replace(state)
+    if new.turn is not None and piece is not None:
+        move_to = (
+            new.board[new.turn][piece - 1] + new.dice
+            if new.board[new.turn][piece - 1] >= 4
+            else 4
+        )
+        board = [list(row) for row in new.board]
         for t in range(4):
             for p in range(4):
-                x, y = mapping[t][self.board[t][p]]
-                if colored:
-                    table[x][y] = (
-                        color_bg[t] + mapping_color[t] + color_reset + str(p + 1)
-                    )
-                else:
-                    table[x][y] = mapping_color[t] + str(p + 1)
-        visualized = ""
-        for x in range(11):
-            for c in table[x]:
-                visualized += "[" + c + "]" if c is not None else "    "
-            visualized += "\n"
-        visualized += "\n"
-        if self.turn is not None:
-            turn_label = mapping_color[self.turn]
-            if colored:
-                turn_label = color_bg[self.turn] + turn_label + color_reset
-            visualized += "Turn: " + turn_label + ", Dice: " + str(self.dice)
-        elif self.winner is not None:
-            winner_label = mapping_color[self.winner]
-            if colored:
-                winner_label = color_bg[self.winner] + winner_label + color_reset
-            visualized += "Winner: " + winner_label
+                if is_same_pos(move_to, new.turn, board[t][p], t):
+                    board[t][p] = p
+        board[new.turn][piece - 1] = move_to
+        new.board = tuple(tuple(row) for row in board)
+    if piece is not None:
+        new.count_six = (new.count_six + 1) % 3 if new.dice == 6 else 0
+    else:
+        new.count_six = 0
+    new.count_start = (new.count_start + 1) % 3 if is_start(new) else 0
+    if new.turn is not None:
+        if set(new.board[new.turn]) == {44, 45, 46, 47}:
+            new.winner = new.turn
+            new.turn = None
         else:
-            assert False, "unreachable"
-        return visualized
+            if new.count_six == 0 and new.count_start == 0:
+                new.turn = next_turn(new, new.turn)
+            new.dice = random.randint(1, 6)
+    return new
+
+
+def visualize(state: State, colored: bool = True) -> str:
+    color_bg = ["\033[97;41m", "\033[97;42m", "\033[97;44m", "\033[30;43m"]
+    color_reset = "\033[0m"
+
+    table: list[list[None | str]] = [
+        [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
+        [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
+        [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
+        [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
+        ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+        ["  ", "  ", "  ", "  ", "  ", None, "  ", "  ", "  ", "  ", "  "],
+        ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+        [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
+        [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
+        [None, "  ", "  ", None, "  ", "  ", "  ", None, "  ", "  ", None],
+        [None, None, None, None, "  ", "  ", "  ", None, None, None, None],
+    ]
+    mapping_r = [
+        (10, 4),
+        (9, 4),
+        (8, 4),
+        (7, 4),
+        (6, 4),
+        (6, 3),
+        (6, 2),
+        (6, 1),
+        (6, 0),
+        (5, 0),
+    ]
+    mapping_g = [
+        (4, 0),
+        (4, 1),
+        (4, 2),
+        (4, 3),
+        (4, 4),
+        (3, 4),
+        (2, 4),
+        (1, 4),
+        (0, 4),
+        (0, 5),
+    ]
+    mapping_b = [
+        (0, 6),
+        (1, 6),
+        (2, 6),
+        (3, 6),
+        (4, 6),
+        (4, 7),
+        (4, 8),
+        (4, 9),
+        (4, 10),
+        (5, 10),
+    ]
+    mapping_y = [
+        (6, 10),
+        (6, 9),
+        (6, 8),
+        (6, 7),
+        (6, 6),
+        (7, 6),
+        (8, 6),
+        (9, 6),
+        (10, 6),
+        (10, 5),
+    ]
+    mapping = [
+        (
+            [(8, 1), (8, 2), (9, 1), (9, 2)]
+            + (mapping_r + mapping_g + mapping_b + mapping_y)
+            + [(9, 5), (8, 5), (7, 5), (6, 5)]
+        ),
+        (
+            [(1, 1), (1, 2), (2, 1), (2, 2)]
+            + (mapping_g + mapping_b + mapping_y + mapping_r)
+            + [(5, 1), (5, 2), (5, 3), (5, 4)]
+        ),
+        (
+            [(1, 8), (1, 9), (2, 8), (2, 9)]
+            + (mapping_b + mapping_y + mapping_r + mapping_g)
+            + [(1, 5), (2, 5), (3, 5), (4, 5)]
+        ),
+        (
+            [(8, 8), (8, 9), (9, 8), (9, 9)]
+            + (mapping_y + mapping_r + mapping_g + mapping_b)
+            + [(5, 9), (5, 8), (5, 7), (5, 6)]
+        ),
+    ]
+    mapping_color = ["R", "G", "B", "Y"]
+    for t in range(4):
+        for p in range(4):
+            x, y = mapping[t][state.board[t][p]]
+            if colored:
+                table[x][y] = color_bg[t] + mapping_color[t] + color_reset + str(p + 1)
+            else:
+                table[x][y] = mapping_color[t] + str(p + 1)
+    visualized = ""
+    for x in range(11):
+        for c in table[x]:
+            visualized += "[" + c + "]" if c is not None else "    "
+        visualized += "\n"
+    visualized += "\n"
+    if state.turn is not None:
+        turn_label = mapping_color[state.turn]
+        if colored:
+            turn_label = color_bg[state.turn] + turn_label + color_reset
+        visualized += "Turn: " + turn_label + ", Dice: " + str(state.dice)
+    elif state.winner is not None:
+        winner_label = mapping_color[state.winner]
+        if colored:
+            winner_label = color_bg[state.winner] + winner_label + color_reset
+        visualized += "Winner: " + winner_label
+    else:
+        assert False, "unreachable"
+    return visualized
 
 
 def in_theo(s: State) -> bool:
@@ -219,7 +240,7 @@ def read_bin(filename: str, index: int) -> float:
         return r
 
 
-def rank_pieces(positions: list[int]) -> tuple[int, int, int]:
+def rank_pieces(positions: tuple[int, ...]) -> tuple[int, int, int]:
     d = sorted(positions, reverse=True)
     assert d[0] == 47
     for i, floor in ((3, 0), (2, 1), (1, 2)):
@@ -281,8 +302,8 @@ class HotaruEvaluator(Evaluator):
     def eval(self, state: State) -> dict[int | None, float]:
         assert state.turn == 0 or state.turn == 2
         result = {}
-        for move in state.get_movables():
-            state_next = state.move(move)
+        for move in get_movables(state):
+            state_next = apply_move(state, move)
             if in_theo(state_next) and self.enable_endgame:
                 result[move] = self.score_theo(state_next, state.turn)
             elif self.params_midgame is not None:
@@ -294,7 +315,7 @@ class HotaruEvaluator(Evaluator):
 
 class RandomEvaluator(Evaluator):
     def eval(self, state: State) -> dict[int | None, float]:
-        return dict.fromkeys(state.get_movables(), 0)
+        return dict.fromkeys(get_movables(state), 0)
 
 
 def get_absolute_pos(pos: int, turn: int) -> int:
@@ -308,11 +329,11 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
 
 
 def autoplay(evaluators: list[Evaluator | None]) -> int:
-    state = State()
+    state = new_state()
     while state.turn is not None:
         evaluator = evaluators[state.turn]
         if evaluator is None:
-            state = state.move(None)
+            state = apply_move(state, None)
         else:
             scores = evaluator.eval(state)
             move = random.choice(
@@ -322,15 +343,36 @@ def autoplay(evaluators: list[Evaluator | None]) -> int:
                     if score == max(scores.values())
                 ]
             )
-            state = state.move(move)
+            state = apply_move(state, move)
     assert state.winner is not None
     return state.winner
 
 
+def parse_players(value: str) -> frozenset[int]:
+    try:
+        players = frozenset(int(seat) for seat in value.split(","))
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid players: {value}") from None
+    if not (players <= frozenset(range(4)) and len(players) >= 2):
+        raise argparse.ArgumentTypeError(f"invalid players: {value}")
+    return players
+
+
 def cli(
+    argv: list[str] | None = None,
     input_fn: Callable[[str], str] = input,
     print_fn: Callable[..., None] = print,
 ) -> None:
+    parser = argparse.ArgumentParser(prog="hotaru")
+    parser.add_argument(
+        "--players",
+        type=parse_players,
+        default=frozenset(range(4)),
+        help="comma-separated seat indices (0-3, at least 2) that participate,"
+        " e.g. 0,2 (default: 0,1,2,3)",
+    )
+    args = parser.parse_args(argv)
+
     enable_midgame = Path("params_midgame.dat").exists()
     enable_endgame = Path("params_endgame.dat").exists()
     evaluator: Evaluator = (
@@ -338,11 +380,12 @@ def cli(
         if enable_midgame or enable_endgame
         else RandomEvaluator()
     )
-    state = State()
+    state = new_state(players=args.players)
+    history: list[State] = []
     query_previous = [""]
     while True:
-        movables = state.get_movables()
-        print_fn(state.visualize())
+        movables = get_movables(state)
+        print_fn(visualize(state))
         while True:
             query = input_fn("> ").split()
             if len(query) == 0:
@@ -352,12 +395,14 @@ def cli(
             if query[0] == "move":
                 piece = int(query[1])
                 if piece in movables:
-                    state = state.move(piece)
+                    history.append(state)
+                    state = apply_move(state, piece)
                     break
                 print_fn("Cannot move: " + query[1])
             elif query[0] == "pass":
                 if None in movables:
-                    state = state.move(None)
+                    history.append(state)
+                    state = apply_move(state, None)
                     break
                 print_fn("Cannot pass")
             elif query[0] == "eval":
@@ -382,7 +427,8 @@ def cli(
                         if score == max(scores.values())
                     ]
                 )
-                state = state.move(move)
+                history.append(state)
+                state = apply_move(state, move)
                 break
             elif query[0] == "dice":
                 dice = int(query[1])
@@ -391,11 +437,12 @@ def cli(
                     break
                 print_fn("Invalid dice roll: " + query[1])
             elif query[0] == "new":
-                state = State()
+                state = new_state(players=args.players)
+                history = []
                 break
             elif query[0] in ("undo",):
-                if state.previous is not None:
-                    state = state.previous
+                if history:
+                    state = history.pop()
                 else:
                     print_fn("Cannot undo")
                 break

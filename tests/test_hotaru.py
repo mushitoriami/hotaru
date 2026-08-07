@@ -6,24 +6,28 @@ import pytest
 from hotaru import (
     HotaruEvaluator,
     RandomEvaluator,
-    State,
+    apply_move,
     autoplay,
     cli,
     get_absolute_pos,
+    get_movables,
     is_same_pos,
+    is_start,
+    new_state,
+    visualize,
 )
 
 
 def test_init_board() -> None:
-    assert State().board == [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    assert new_state().board == ((0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
 
 
 def test_board_0() -> None:
-    state = State()
+    state = new_state()
     state.dice = 1
-    assert state.is_start() is True
+    assert is_start(state) is True
     assert (
-        state.visualize(colored=False)
+        visualize(state, colored=False)
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -42,21 +46,16 @@ def test_board_0() -> None:
 
 
 def test_board_1() -> None:
-    state = State()
-    state.board = [[46, 1, 8, 10], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state = new_state()
+    state.board = ((46, 1, 8, 10), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.dice, state.turn = 2, 0
-    assert state.get_movables() == [4]
-    state = state.move(4)
-    assert state.board == [
-        [46, 1, 8, 12],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-    ]
+    assert get_movables(state) == [4]
+    state = apply_move(state, 4)
+    assert state.board == ((46, 1, 8, 12), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.dice = 5
-    assert state.is_start() is True
+    assert is_start(state) is True
     assert (
-        state.visualize(colored=False)
+        visualize(state, colored=False)
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -75,21 +74,16 @@ def test_board_1() -> None:
 
 
 def test_board_2() -> None:
-    state = State()
-    state.board = [[10, 4, 2, 43], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state = new_state()
+    state.board = ((10, 4, 2, 43), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.dice, state.turn = 6, 0
-    assert state.get_movables() == [1]
-    state = state.move(1)
-    assert state.board == [
-        [16, 4, 2, 43],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-    ]
+    assert get_movables(state) == [1]
+    state = apply_move(state, 1)
+    assert state.board == ((16, 4, 2, 43), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.dice = 5
-    assert state.is_start() is False
+    assert is_start(state) is False
     assert (
-        state.visualize(colored=False)
+        visualize(state, colored=False)
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -108,21 +102,16 @@ def test_board_2() -> None:
 
 
 def test_board_3() -> None:
-    state = State()
-    state.board = [[0, 7, 46, 15], [0, 34, 2, 3], [0, 1, 2, 3], [0, 1, 2, 19]]
+    state = new_state()
+    state.board = ((0, 7, 46, 15), (0, 34, 2, 3), (0, 1, 2, 3), (0, 1, 2, 19))
     state.dice, state.turn = 2, 0
-    assert state.get_movables() == [2, 4]
-    state = state.move(2)
-    assert state.board == [
-        [0, 9, 46, 15],
-        [0, 34, 2, 3],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-    ]
+    assert get_movables(state) == [2, 4]
+    state = apply_move(state, 2)
+    assert state.board == ((0, 9, 46, 15), (0, 34, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.dice = 5
-    assert state.is_start() is False
+    assert is_start(state) is False
     assert (
-        state.visualize(colored=False)
+        visualize(state, colored=False)
         == "                [  ][  ][  ]                \n"
         + "    [G1][  ]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -141,21 +130,16 @@ def test_board_3() -> None:
 
 
 def test_board_4() -> None:
-    state = State()
-    state.board = [[13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3], [0, 29, 2, 3]]
+    state = new_state()
+    state.board = ((13, 43, 2, 3), (0, 1, 34, 3), (0, 1, 2, 3), (0, 29, 2, 3))
     state.dice, state.turn = 6, 0
-    assert state.get_movables() == [1, 3, 4]
-    state = state.move(3)
-    assert state.board == [
-        [13, 43, 4, 3],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-        [0, 29, 2, 3],
-    ]
+    assert get_movables(state) == [1, 3, 4]
+    state = apply_move(state, 3)
+    assert state.board == ((13, 43, 4, 3), (0, 1, 2, 3), (0, 1, 2, 3), (0, 29, 2, 3))
     state.dice = 3
-    assert state.is_start() is False
+    assert is_start(state) is False
     assert (
-        state.visualize(colored=False)
+        visualize(state, colored=False)
         == "                [  ][  ][  ]                \n"
         + "    [G1][G2]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][G4]    [  ][  ][  ]    [B3][B4]    \n"
@@ -174,21 +158,16 @@ def test_board_4() -> None:
 
 
 def test_board_5() -> None:
-    state = State()
-    state.board = [[0, 29, 2, 3], [13, 43, 2, 3], [0, 1, 34, 3], [0, 1, 2, 3]]
+    state = new_state()
+    state.board = ((0, 29, 2, 3), (13, 43, 2, 3), (0, 1, 34, 3), (0, 1, 2, 3))
     state.dice, state.turn = 6, 1
-    assert state.get_movables() == [1, 3, 4]
-    state = state.move(4)
-    assert state.board == [
-        [0, 29, 2, 3],
-        [13, 43, 2, 4],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-    ]
+    assert get_movables(state) == [1, 3, 4]
+    state = apply_move(state, 4)
+    assert state.board == ((0, 29, 2, 3), (13, 43, 2, 4), (0, 1, 2, 3), (0, 1, 2, 3))
     state.dice = 4
-    assert state.is_start() is False
+    assert is_start(state) is False
     assert (
-        state.visualize(colored=False)
+        visualize(state, colored=False)
         == "                [  ][G1][  ]                \n"
         + "    [  ][  ]    [  ][  ][  ]    [B1][B2]    \n"
         + "    [G3][  ]    [  ][  ][  ]    [B3][B4]    \n"
@@ -245,7 +224,7 @@ def test_is_same_pos() -> None:
 
 
 def test_visualize_colored() -> None:
-    state = State()
+    state = new_state()
     state.dice = 1
 
     red_bg = "\033[97;41m"
@@ -254,7 +233,7 @@ def test_visualize_colored() -> None:
     yellow_bg = "\033[30;43m"
     reset = "\033[0m"
 
-    colored_output = state.visualize(colored=True)
+    colored_output = visualize(state, colored=True)
 
     assert f"[{red_bg}R{reset}1]" in colored_output
     assert f"[{green_bg}G{reset}1]" in colored_output
@@ -265,152 +244,152 @@ def test_visualize_colored() -> None:
 
 
 def test_visualize_colored_winner() -> None:
-    state = State()
-    state.board = [[44, 45, 46, 47], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state = new_state()
+    state.board = ((44, 45, 46, 47), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.turn = None
     state.winner = 0
 
     red_bg = "\033[97;41m"
     reset = "\033[0m"
 
-    colored_output = state.visualize(colored=True)
+    colored_output = visualize(state, colored=True)
     assert f"Winner: {red_bg}R{reset}" in colored_output
 
 
 def test_three_sixes_rule() -> None:
-    state = State()
-    state.board = [[4, 5, 6, 7], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state = new_state()
+    state.board = ((4, 5, 6, 7), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.turn = 0
     state.count_six = 0
 
     state.dice = 6
-    state = state.move(1)
+    state = apply_move(state, 1)
     assert state.count_six == 1
     assert state.turn == 0
 
     state.dice = 6
-    state = state.move(1)
+    state = apply_move(state, 1)
     assert state.count_six == 2
     assert state.turn == 0
 
     state.dice = 6
-    state = state.move(1)
+    state = apply_move(state, 1)
     assert state.count_six == 0
     assert state.turn == 1
 
 
 def test_three_sixes_rule_reset_on_non_six() -> None:
-    state = State()
-    state.board = [[4, 5, 6, 7], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state = new_state()
+    state.board = ((4, 5, 6, 7), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.turn = 0
     state.count_six = 0
 
     state.dice = 6
-    state = state.move(1)
+    state = apply_move(state, 1)
     assert state.count_six == 1
     assert state.turn == 0
 
     state.dice = 6
-    state = state.move(1)
+    state = apply_move(state, 1)
     assert state.count_six == 2
     assert state.turn == 0
 
     state.dice = 3
-    state = state.move(1)
+    state = apply_move(state, 1)
     assert state.count_six == 0
     assert state.turn == 1
 
 
 def test_three_starts_rule() -> None:
-    state = State()
-    state.board = [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state = new_state()
+    state.board = ((0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.turn = 0
     state.count_start = 0
 
     state.dice = 3
-    assert state.get_movables() == [None]
-    state = state.move(None)
+    assert get_movables(state) == [None]
+    state = apply_move(state, None)
     assert state.count_start == 1
     assert state.turn == 0
 
     state.dice = 2
-    state = state.move(None)
+    state = apply_move(state, None)
     assert state.count_start == 2
     assert state.turn == 0
 
     state.dice = 4
-    state = state.move(None)
+    state = apply_move(state, None)
     assert state.count_start == 0
     assert state.turn == 1
 
 
 def test_three_starts_rule_reset_on_leaving_start() -> None:
-    state = State()
-    state.board = [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state = new_state()
+    state.board = ((0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.turn = 0
     state.count_start = 0
 
     state.dice = 3
-    state = state.move(None)
+    state = apply_move(state, None)
     assert state.count_start == 1
     assert state.turn == 0
 
     state.dice = 2
-    state = state.move(None)
+    state = apply_move(state, None)
     assert state.count_start == 2
     assert state.turn == 0
 
     state.dice = 6
-    state = state.move(1)
+    state = apply_move(state, 1)
     assert state.board[0][0] == 4
-    assert state.is_start() is False
+    assert is_start(state) is False
     assert state.count_start == 0
     assert state.count_six == 1
     assert state.turn == 0
 
 
 def test_three_starts_with_six_interaction() -> None:
-    state = State()
-    state.board = [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state = new_state()
+    state.board = ((0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.turn = 0
     state.count_start = 2
     state.count_six = 0
 
     state.dice = 6
-    state = state.move(1)
-    assert state.is_start() is False
+    state = apply_move(state, 1)
+    assert is_start(state) is False
     assert state.count_start == 0
     assert state.count_six == 1
     assert state.turn == 0
 
     state.dice = 6
-    state = state.move(1)
+    state = apply_move(state, 1)
     assert state.count_six == 2
     assert state.turn == 0
 
     state.dice = 6
-    state = state.move(1)
+    state = apply_move(state, 1)
     assert state.count_six == 0
     assert state.turn == 1
 
 
 def test_count_six_reset_on_pass() -> None:
-    state = State()
-    state.board = [[43, 45, 46, 47], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]]
+    state = new_state()
+    state.board = ((43, 45, 46, 47), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state.turn = 0
     state.count_six = 1
 
     state.dice = 6
-    assert state.get_movables() == [None]
-    state = state.move(None)
+    assert get_movables(state) == [None]
+    state = apply_move(state, None)
 
     assert state.count_six == 0
     assert state.turn == 1
 
 
 @pytest.fixture
-def run_cli() -> Callable[[list[str]], list[str]]:
-    def _run(inputs: list[str]) -> list[str]:
+def run_cli() -> Callable[..., list[str]]:
+    def _run(inputs: list[str], argv: list[str] | None = None) -> list[str]:
         input_iter = iter(inputs)
         outputs: list[str] = []
 
@@ -420,7 +399,11 @@ def run_cli() -> Callable[[list[str]], list[str]]:
         def mock_print(*args: object) -> None:
             outputs.append(" ".join(str(arg) for arg in args))
 
-        cli(input_fn=mock_input, print_fn=mock_print)
+        cli(
+            argv=argv if argv is not None else [],
+            input_fn=mock_input,
+            print_fn=mock_print,
+        )
         return outputs
 
     return _run
@@ -470,6 +453,17 @@ def test_cli_8(run_cli: Callable[[list[str]], list[str]]) -> None:
     assert boards[1] != boards[2]
 
 
+def test_cli_players_option(run_cli: Callable[..., list[str]]) -> None:
+    green_bg, reset = "\033[97;42m", "\033[0m"
+    outputs = run_cli(["quit"], argv=["--players", "1,3"])
+    assert any(f"Turn: {green_bg}G{reset}" in output for output in outputs)
+
+
+def test_cli_players_option_invalid(run_cli: Callable[..., list[str]]) -> None:
+    with pytest.raises(SystemExit):
+        run_cli(["quit"], argv=["--players", "0"])
+
+
 def test_autoplay_1(run_cli: Callable[[list[str]], list[str]]) -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
@@ -501,10 +495,10 @@ def test_autoplay_2(run_cli: Callable[[list[str]], list[str]]) -> None:
 
 
 def test_hotaru_evaluator_endgame_only_outside_theo() -> None:
-    state = State()
+    state = new_state()
     state.dice = 1
     evaluator = HotaruEvaluator(enable_midgame=False, enable_endgame=True)
-    assert evaluator.eval(state) == dict.fromkeys(state.get_movables(), 0)
+    assert evaluator.eval(state) == dict.fromkeys(get_movables(state), 0)
 
 
 @pytest.mark.skipif(
