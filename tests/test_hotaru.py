@@ -5,6 +5,7 @@ from dataclasses import replace
 import pytest
 
 from hotaru import (
+    State,
     apply_move,
     autoplay,
     cli,
@@ -17,6 +18,10 @@ from hotaru import (
     random_evaluator,
     visualize,
 )
+
+
+def apply_move_one(state: State, piece: int | None) -> State:
+    return next(iter(apply_move(state, piece)))
 
 
 def test_init_board() -> None:
@@ -54,7 +59,7 @@ def test_board_1() -> None:
         turn=0,
     )
     assert get_movables(state) == [4]
-    state = apply_move(state, 4)
+    state = apply_move_one(state, 4)
     assert state.board == ((46, 1, 8, 12), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state = replace(state, dice=5)
     assert is_start(state) is True
@@ -86,7 +91,7 @@ def test_board_2() -> None:
         turn=0,
     )
     assert get_movables(state) == [1]
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.board == ((16, 4, 2, 43), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state = replace(state, dice=5)
     assert is_start(state) is False
@@ -118,7 +123,7 @@ def test_board_3() -> None:
         turn=0,
     )
     assert get_movables(state) == [2, 4]
-    state = apply_move(state, 2)
+    state = apply_move_one(state, 2)
     assert state.board == ((0, 9, 46, 15), (0, 34, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state = replace(state, dice=5)
     assert is_start(state) is False
@@ -150,7 +155,7 @@ def test_board_4() -> None:
         turn=0,
     )
     assert get_movables(state) == [1, 3, 4]
-    state = apply_move(state, 3)
+    state = apply_move_one(state, 3)
     assert state.board == ((13, 43, 4, 3), (0, 1, 2, 3), (0, 1, 2, 3), (0, 29, 2, 3))
     state = replace(state, dice=3)
     assert is_start(state) is False
@@ -182,7 +187,7 @@ def test_board_5() -> None:
         turn=1,
     )
     assert get_movables(state) == [1, 3, 4]
-    state = apply_move(state, 4)
+    state = apply_move_one(state, 4)
     assert state.board == ((0, 29, 2, 3), (13, 43, 2, 4), (0, 1, 2, 3), (0, 1, 2, 3))
     state = replace(state, dice=4)
     assert is_start(state) is False
@@ -287,17 +292,17 @@ def test_three_sixes_rule() -> None:
     )
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 1
     assert state.turn == 0
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 2
     assert state.turn == 0
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 0
     assert state.turn == 1
 
@@ -311,17 +316,17 @@ def test_three_sixes_rule_reset_on_non_six() -> None:
     )
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 1
     assert state.turn == 0
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 2
     assert state.turn == 0
 
     state = replace(state, dice=3)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 0
     assert state.turn == 1
 
@@ -336,17 +341,17 @@ def test_three_starts_rule() -> None:
 
     state = replace(state, dice=3)
     assert get_movables(state) == [None]
-    state = apply_move(state, None)
+    state = apply_move_one(state, None)
     assert state.count_start == 1
     assert state.turn == 0
 
     state = replace(state, dice=2)
-    state = apply_move(state, None)
+    state = apply_move_one(state, None)
     assert state.count_start == 2
     assert state.turn == 0
 
     state = replace(state, dice=4)
-    state = apply_move(state, None)
+    state = apply_move_one(state, None)
     assert state.count_start == 0
     assert state.turn == 1
 
@@ -360,17 +365,17 @@ def test_three_starts_rule_reset_on_leaving_start() -> None:
     )
 
     state = replace(state, dice=3)
-    state = apply_move(state, None)
+    state = apply_move_one(state, None)
     assert state.count_start == 1
     assert state.turn == 0
 
     state = replace(state, dice=2)
-    state = apply_move(state, None)
+    state = apply_move_one(state, None)
     assert state.count_start == 2
     assert state.turn == 0
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.board[0][0] == 4
     assert is_start(state) is False
     assert state.count_start == 0
@@ -388,19 +393,19 @@ def test_three_starts_with_six_interaction() -> None:
     )
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert is_start(state) is False
     assert state.count_start == 0
     assert state.count_six == 1
     assert state.turn == 0
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 2
     assert state.turn == 0
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 0
     assert state.turn == 1
 
@@ -415,7 +420,7 @@ def test_count_six_reset_on_pass() -> None:
 
     state = replace(state, dice=6)
     assert get_movables(state) == [None]
-    state = apply_move(state, None)
+    state = apply_move_one(state, None)
 
     assert state.count_six == 0
     assert state.turn == 1

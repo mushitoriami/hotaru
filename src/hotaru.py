@@ -67,7 +67,7 @@ def get_movables(state: State) -> list[int | None]:
     return moves
 
 
-def apply_move(state: State, piece: int | None) -> State:
+def apply_move(state: State, piece: int | None) -> set[State]:
     board = state.board
     if state.turn is not None and piece is not None:
         move_to = (
@@ -92,7 +92,7 @@ def apply_move(state: State, piece: int | None) -> State:
 
     turn = state.turn
     winner = state.winner
-    dice = state.dice
+    reroll = False
     if turn is not None:
         if set(board[turn]) == {44, 45, 46, 47}:
             winner = turn
@@ -100,17 +100,19 @@ def apply_move(state: State, piece: int | None) -> State:
         else:
             if count_six == 0 and count_start == 0:
                 turn = next_turn(state, turn)
-            dice = random.randint(1, 6)
+            reroll = True
 
-    return replace(
+    base = replace(
         state,
         board=board,
         turn=turn,
         winner=winner,
-        dice=dice,
         count_six=count_six,
         count_start=count_start,
     )
+    if reroll:
+        return {replace(base, dice=dice) for dice in range(1, 7)}
+    return {base}
 
 
 def _rotate_quarter(pos: tuple[int, int]) -> tuple[int, int]:
@@ -294,9 +296,12 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
 def choose_move(state: State, evaluator: Evaluator) -> int | None:
     turn = state.turn
     assert turn is not None
-    scores = {
-        move: evaluator(apply_move(state, move))[turn] for move in get_movables(state)
-    }
+
+    def expected_score(move: int | None) -> float:
+        outcomes = apply_move(state, move)
+        return sum(evaluator(outcome)[turn] for outcome in outcomes) / len(outcomes)
+
+    scores = {move: expected_score(move) for move in get_movables(state)}
     best_score = max(scores.values())
     return random.choice(
         [move for move, score in scores.items() if score == best_score]
@@ -307,11 +312,8 @@ def autoplay(evaluators: list[Evaluator | None]) -> int:
     state = new_state()
     while state.turn is not None:
         evaluator = evaluators[state.turn]
-        if evaluator is None:
-            state = apply_move(state, None)
-        else:
-            move = choose_move(state, evaluator)
-            state = apply_move(state, move)
+        move = None if evaluator is None else choose_move(state, evaluator)
+        state = random.choice(list(apply_move(state, move)))
     assert state.winner is not None
     return state.winner
 
@@ -383,19 +385,19 @@ def cli(
                 piece = int(query[1])
                 if piece in movables:
                     history.append(state)
-                    state = apply_move(state, piece)
+                    state = random.choice(list(apply_move(state, piece)))
                     break
                 print_fn("Cannot move: " + query[1])
             elif query[0] == "pass":
                 if None in movables:
                     history.append(state)
-                    state = apply_move(state, None)
+                    state = random.choice(list(apply_move(state, None)))
                     break
                 print_fn("Cannot pass")
             elif query[0] == "auto":
                 move = choose_move(state, evaluator)
                 history.append(state)
-                state = apply_move(state, move)
+                state = random.choice(list(apply_move(state, move)))
                 break
             elif query[0] == "dice":
                 dice = int(query[1])
