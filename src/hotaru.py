@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import mmap
 import random
 import readline  # noqa: F401
 import struct
@@ -228,16 +229,14 @@ def in_theo(s: State) -> bool:
     )
 
 
-def eval_state_theo(filename: str, state: State, turn: int) -> float:
-    return read_bin(filename, index_state(state, turn))
+def eval_state_theo(mm: mmap.mmap, state: State, turn: int) -> float:
+    return read_bin(mm, index_state(state, turn))
 
 
-def read_bin(filename: str, index: int) -> float:
-    with open(filename, "rb") as f:
-        f.seek(index * 4)
-        r = struct.unpack("f", f.read(4))[0]
-        assert isinstance(r, float)
-        return r
+def read_bin(mm: mmap.mmap, index: int) -> float:
+    r = struct.unpack_from("f", mm, index * 4)[0]
+    assert isinstance(r, float)
+    return r
 
 
 def rank_pieces(positions: tuple[int, ...]) -> tuple[int, int, int]:
@@ -281,10 +280,15 @@ class HotaruEvaluator(Evaluator):
         if enable_midgame:
             with open("params_midgame.dat", "rb") as f:
                 self.params_midgame = f.read()
+        self.params_endgame: mmap.mmap | None = None
+        if enable_endgame:
+            with open("params_endgame.dat", "rb") as f:
+                self.params_endgame = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
         self.enable_endgame: bool = enable_endgame
 
     def score_theo(self, s: State, turn: int) -> float:
-        return 1 - 2 * eval_state_theo("params_endgame.dat", s, 1 if turn == 0 else 0)
+        assert self.params_endgame is not None
+        return 1 - 2 * eval_state_theo(self.params_endgame, s, 1 if turn == 0 else 0)
 
     def score(self, state: State, turn: int) -> float:
         assert self.params_midgame is not None
