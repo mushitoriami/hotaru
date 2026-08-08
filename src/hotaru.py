@@ -184,17 +184,9 @@ def visualize(state: State, colored: bool = True) -> str:
     return _render_board(state, colored) + "\n\n" + _render_status(state, colored)
 
 
-def in_theo(s: State) -> bool:
-    return (
-        s.board[0][0] == 47
-        or s.board[0][1] == 47
-        or s.board[0][2] == 47
-        or s.board[0][3] == 47
-    ) and (
-        s.board[2][0] == 47
-        or s.board[2][1] == 47
-        or s.board[2][2] == 47
-        or s.board[2][3] == 47
+def in_theo(s: State, turn: int) -> bool:
+    return any(p == 47 for p in s.board[turn]) and any(
+        p == 47 for p in s.board[(turn + 2) % 4]
     )
 
 
@@ -229,13 +221,13 @@ def combination_rank(x1: int, x2: int, x3: int) -> int:
 
 
 def index_state(state: State, turn: int) -> int:
-    p = combination_rank(*rank_pieces(state.board[0]))
-    o = combination_rank(*rank_pieces(state.board[2]))
+    p = combination_rank(*rank_pieces(state.board[turn]))
+    o = combination_rank(*rank_pieces(state.board[(turn + 2) % 4]))
     span = comb(47, 3)
-    return span * p + o if turn == 0 else span * o + p
+    return span * p + o
 
 
-Evaluator = Callable[[State], float]
+Evaluator = Callable[[State], dict[int, float]]
 
 
 def score_midgame(
@@ -255,25 +247,38 @@ def score_midgame(
 def score_endgame(
     params_endgame: mmap.mmap | None, s: State, turn: int
 ) -> float | None:
-    if params_endgame is None or not in_theo(s):
+    if params_endgame is None or not in_theo(s, turn):
         return None
-    return 1 - 2 * eval_state_theo(params_endgame, s, 1 if turn == 0 else 0)
+    return 1 - 2 * eval_state_theo(params_endgame, s, (turn + 2) % 4)
+
+
+def score_player(
+    state: State,
+    turn: int,
+    params_midgame: bytes | None,
+    params_endgame: mmap.mmap | None,
+) -> float:
+    score = score_endgame(params_endgame, state, turn)
+    if score is None:
+        score = score_midgame(params_midgame, state, turn)
+    return score if score is not None else 0
 
 
 def hotaru_evaluator(
     state: State,
     params_midgame: bytes | None,
     params_endgame: mmap.mmap | None,
-) -> float:
-    assert state.turn == 0 or state.turn == 2
-    score = score_endgame(params_endgame, state, state.turn)
-    if score is None:
-        score = score_midgame(params_midgame, state, state.turn)
-    return score if score is not None else 0
+) -> dict[int, float]:
+    def score(turn: int) -> float:
+        if turn not in state.players:
+            return 0.0
+        return score_player(state, turn, params_midgame, params_endgame)
+
+    return {turn: score(turn) for turn in range(4)}
 
 
-def random_evaluator(state: State) -> float:
-    return 0
+def random_evaluator(state: State) -> dict[int, float]:
+    return {turn: 0.0 for turn in range(4)}
 
 
 def get_absolute_pos(pos: int, turn: int) -> int:
@@ -287,9 +292,10 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
 
 
 def choose_move(state: State, evaluator: Evaluator) -> int | None:
+    turn = state.turn
+    assert turn is not None
     scores = {
-        move: evaluator(replace(apply_move(state, move), turn=state.turn))
-        for move in get_movables(state)
+        move: evaluator(apply_move(state, move))[turn] for move in get_movables(state)
     }
     best_score = max(scores.values())
     return random.choice(
