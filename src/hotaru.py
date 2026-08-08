@@ -3,12 +3,15 @@ from __future__ import annotations
 import argparse
 import mmap
 import random
-import readline  # noqa: F401
 import struct
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from math import comb
 from pathlib import Path
+from typing import IO
+
+from shizuku import Agent, Cli, Game
+from shizuku import play_auto as engine_play_auto
 
 
 @dataclass(frozen=True)
@@ -183,7 +186,7 @@ def _render_status(state: State, colored: bool) -> str:
 
 
 def visualize(state: State, colored: bool = True) -> str:
-    return _render_board(state, colored) + "\n\n" + _render_status(state, colored)
+    return _render_board(state, colored) + "\n\n" + _render_status(state, colored) + "\n"
 
 
 def in_theo(s: State, turn: int) -> bool:
@@ -293,19 +296,33 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
     return get_absolute_pos(pos1, turn1) == get_absolute_pos(pos2, turn2)
 
 
+def _current_player(state: State) -> int:
+    assert state.turn is not None
+    return state.turn + 1
+
+
+HOTARU_GAME: Game[State, int] = Game(
+    get_moves=lambda state: frozenset(get_movables(state)),
+    apply_move=lambda move, state: apply_move(state, move),
+    is_end=lambda state: state.turn is None,
+    current_player=_current_player,
+    player_count=lambda state: 4,
+    parse_move=int,
+    format_move=str,
+    render=visualize,
+)
+
+
+def _adapt_evaluator(evaluator: Evaluator) -> Callable[[State], dict[int, float]]:
+    def adapted(state: State) -> dict[int, float]:
+        return {seat + 1: score for seat, score in evaluator(state).items()}
+
+    return adapted
+
+
 def choose_move(state: State, evaluator: Evaluator) -> int | None:
-    turn = state.turn
-    assert turn is not None
-
-    def expected_score(move: int | None) -> float:
-        outcomes = apply_move(state, move)
-        return sum(evaluator(outcome)[turn] for outcome in outcomes) / len(outcomes)
-
-    scores = {move: expected_score(move) for move in get_movables(state)}
-    best_score = max(scores.values())
-    return random.choice(
-        [move for move, score in scores.items() if score == best_score]
-    )
+    assert state.turn is not None
+    return engine_play_auto(HOTARU_GAME, Agent(_adapt_evaluator(evaluator), 0), state)
 
 
 def autoplay(evaluators: list[Evaluator | None]) -> int:
@@ -330,8 +347,8 @@ def parse_players(value: str) -> frozenset[int]:
 
 def cli(
     argv: list[str] | None = None,
-    input_fn: Callable[[str], str] = input,
-    print_fn: Callable[..., None] = print,
+    stdin: IO[str] | None = None,
+    stdout: IO[str] | None = None,
 ) -> None:
     parser = argparse.ArgumentParser(prog="hotaru")
     parser.add_argument(
@@ -369,53 +386,10 @@ def cli(
         if params_midgame is not None or params_endgame is not None
         else random_evaluator
     )
-    state = new_state(players=args.players)
-    history: list[State] = []
-    query_previous = [""]
-    while True:
-        movables = get_movables(state)
-        print_fn(visualize(state))
-        while True:
-            query = input_fn("> ").split()
-            if len(query) == 0:
-                query = query_previous
-            else:
-                query_previous = query
-            if query[0] == "move":
-                piece = int(query[1])
-                if piece in movables:
-                    history.append(state)
-                    state = random.choice(list(apply_move(state, piece)))
-                    break
-                print_fn("Cannot move: " + query[1])
-            elif query[0] == "pass":
-                if None in movables:
-                    history.append(state)
-                    state = random.choice(list(apply_move(state, None)))
-                    break
-                print_fn("Cannot pass")
-            elif query[0] == "auto":
-                move = choose_move(state, evaluator)
-                history.append(state)
-                state = random.choice(list(apply_move(state, move)))
-                break
-            elif query[0] == "dice":
-                dice = int(query[1])
-                if 1 <= dice <= 6:
-                    state = replace(state, dice=dice)
-                    break
-                print_fn("Invalid dice roll: " + query[1])
-            elif query[0] == "new":
-                state = new_state(players=args.players)
-                history = []
-                break
-            elif query[0] in ("undo",):
-                if history:
-                    state = history.pop()
-                else:
-                    print_fn("Cannot undo")
-                break
-            elif query[0] in ("quit", "exit"):
-                return
-            else:
-                print_fn("Unknown command")
+    Cli(
+        HOTARU_GAME,
+        Agent(_adapt_evaluator(evaluator), 0),
+        new_state(players=args.players),
+        stdin=stdin,
+        stdout=stdout,
+    ).cmdloop()

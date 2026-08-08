@@ -1,10 +1,12 @@
+import io
 import mmap
-from collections.abc import Callable
 from dataclasses import replace
 
 import pytest
+from shizuku import Agent, Cli
 
 from hotaru import (
+    HOTARU_GAME,
     State,
     apply_move,
     autoplay,
@@ -45,7 +47,7 @@ def test_board_0() -> None:
         + "    [R3][R4]    [  ][  ][  ]    [Y1][Y3]    \n"
         + "                [  ][  ][  ]                \n"
         + "\n"
-        + "Turn: R, Dice: 1"
+        + "Turn: R, Dice: 1\n"
     )
     assert get_movables(state) == [None]
     assert random_evaluator(state) == {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
@@ -77,7 +79,7 @@ def test_board_1() -> None:
         + "    [  ][  ]    [  ][  ][  ]    [Y1][Y3]    \n"
         + "                [  ][  ][  ]                \n"
         + "\n"
-        + "Turn: G, Dice: 5"
+        + "Turn: G, Dice: 5\n"
     )
     assert get_movables(state) == [None]
     assert random_evaluator(state) == {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
@@ -109,7 +111,7 @@ def test_board_2() -> None:
         + "    [R3][  ]    [  ][  ][  ]    [Y1][Y3]    \n"
         + "                [R2][R4][  ]                \n"
         + "\n"
-        + "Turn: R, Dice: 5"
+        + "Turn: R, Dice: 5\n"
     )
     assert get_movables(state) == [1, 2]
     assert random_evaluator(state) == {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
@@ -141,7 +143,7 @@ def test_board_3() -> None:
         + "    [  ][  ]    [  ][  ][  ]    [Y1][Y3]    \n"
         + "                [G2][  ][  ]                \n"
         + "\n"
-        + "Turn: G, Dice: 5"
+        + "Turn: G, Dice: 5\n"
     )
     assert get_movables(state) == [2]
     assert random_evaluator(state) == {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
@@ -173,7 +175,7 @@ def test_board_4() -> None:
         + "    [  ][R4]    [  ][  ][  ]    [Y1][Y3]    \n"
         + "                [R3][R2][  ]                \n"
         + "\n"
-        + "Turn: R, Dice: 3"
+        + "Turn: R, Dice: 3\n"
     )
     assert get_movables(state) == [1, 2, 3]
     assert random_evaluator(state) == {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
@@ -205,7 +207,7 @@ def test_board_5() -> None:
         + "    [R3][R4]    [  ][  ][  ]    [Y1][Y3]    \n"
         + "                [  ][  ][  ]                \n"
         + "\n"
-        + "Turn: G, Dice: 4"
+        + "Turn: G, Dice: 4\n"
     )
     assert get_movables(state) == [1, 2, 4]
     assert random_evaluator(state) == {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
@@ -426,84 +428,78 @@ def test_count_six_reset_on_pass() -> None:
     assert state.turn == 1
 
 
-@pytest.fixture
-def run_cli() -> Callable[..., list[str]]:
-    def _run(inputs: list[str], argv: list[str] | None = None) -> list[str]:
-        input_iter = iter(inputs)
-        outputs: list[str] = []
-
-        def mock_input(prompt: str) -> str:
-            return next(input_iter)
-
-        def mock_print(*args: object) -> None:
-            outputs.append(" ".join(str(arg) for arg in args))
-
-        cli(
-            argv=argv if argv is not None else [],
-            input_fn=mock_input,
-            print_fn=mock_print,
-        )
-        return outputs
-
-    return _run
+def run_cli(initial: State, input_text: str, depth: int = 0) -> str:
+    stdout = io.StringIO()
+    Cli(
+        HOTARU_GAME,
+        Agent(lambda state: dict.fromkeys(range(1, 5), 0.0), depth),
+        initial,
+        stdin=io.StringIO(input_text),
+        stdout=stdout,
+    ).cmdloop()
+    return stdout.getvalue()
 
 
-def test_cli_1(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["dice 6", "move 1", "quit"])
-    assert any("Turn:" in output for output in outputs)
-    assert not any("Cannot" in output for output in outputs)
+def test_cli_move() -> None:
+    state = replace(
+        new_state(),
+        board=((10, 4, 2, 43), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3)),
+        dice=6,
+        turn=0,
+    )
+    output = run_cli(state, "move 1\n")
+    assert "Cannot Move" not in output
 
 
-def test_cli_2(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["dice 3", "move 1", "exit"])
-    assert any("Cannot move: 1" in output for output in outputs)
-    assert any("Turn:" in output for output in outputs)
+def test_cli_move_illegal() -> None:
+    state = replace(new_state(), dice=3, turn=0)
+    output = run_cli(state, "move 1\n")
+    assert "Cannot Move: 1" in output
 
 
-def test_cli_3(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["dice 3", "pass", "quit"])
-    assert not any("Cannot pass" in output for output in outputs)
+def test_cli_pass() -> None:
+    state = replace(new_state(), dice=3, turn=0)
+    output = run_cli(state, "pass\n")
+    assert "Cannot Pass" not in output
 
 
-def test_cli_4(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["dice 6", "pass", "quit"])
-    assert any("Cannot pass" in output for output in outputs)
+def test_cli_pass_illegal() -> None:
+    state = replace(new_state(), dice=6, turn=0)
+    output = run_cli(state, "pass\n")
+    assert "Cannot Pass" in output
 
 
-def test_cli_5(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["invalid", "quit"])
-    assert any("Unknown command" in output for output in outputs)
+def test_cli_auto() -> None:
+    state = replace(
+        new_state(),
+        board=((10, 4, 2, 43), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3)),
+        dice=6,
+        turn=0,
+    )
+    output = run_cli(state, "auto\n")
+    assert "Cannot" not in output
+    assert output.count("Dice:") == 2
 
 
-def test_cli_6(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["undo", "quit"])
-    assert any("Cannot undo" in output for output in outputs)
+def test_cli_unknown_command() -> None:
+    state = replace(new_state(), dice=3, turn=0)
+    output = run_cli(state, "invalid\n")
+    assert "Unknown syntax: invalid" in output
 
 
-def test_cli_7(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["dice 6", "move 1", "undo", "quit"])
-    assert not any("Cannot undo" in output for output in outputs)
-
-
-def test_cli_8(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["dice 6", "auto", "quit"])
-    boards = [output for output in outputs if "Turn:" in output]
-    assert len(boards) == 3
-    assert boards[1] != boards[2]
-
-
-def test_cli_players_option(run_cli: Callable[..., list[str]]) -> None:
+def test_cli_players_option() -> None:
     green_bg, reset = "\033[97;42m", "\033[0m"
-    outputs = run_cli(["quit"], argv=["--players", "1,3"])
-    assert any(f"Turn: {green_bg}G{reset}" in output for output in outputs)
+    stdout = io.StringIO()
+    cli(argv=["--players", "1,3"], stdin=io.StringIO(""), stdout=stdout)
+    assert f"Turn: {green_bg}G{reset}" in stdout.getvalue()
 
 
-def test_cli_players_option_invalid(run_cli: Callable[..., list[str]]) -> None:
+def test_cli_players_option_invalid() -> None:
     with pytest.raises(SystemExit):
-        run_cli(["quit"], argv=["--players", "0"])
+        cli(argv=["--players", "0"])
 
 
-def test_autoplay_1(run_cli: Callable[[list[str]], list[str]]) -> None:
+def test_autoplay_1() -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
         result = autoplay(
@@ -518,7 +514,7 @@ def test_autoplay_1(run_cli: Callable[[list[str]], list[str]]) -> None:
     assert all(400 < win < 600 for win in wins)
 
 
-def test_autoplay_2(run_cli: Callable[[list[str]], list[str]]) -> None:
+def test_autoplay_2() -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
         result = autoplay(
@@ -540,9 +536,7 @@ def test_hotaru_evaluator_endgame_only_outside_theo(
     assert hotaru_evaluator(state, None, endgame_params) == {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
 
 
-def test_autoplay_3(
-    run_cli: Callable[[list[str]], list[str]], midgame_params: bytes
-) -> None:
+def test_autoplay_3(midgame_params: bytes) -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
         result = autoplay(
@@ -558,7 +552,6 @@ def test_autoplay_3(
 
 
 def test_autoplay_4(
-    run_cli: Callable[[list[str]], list[str]],
     midgame_params: bytes,
     endgame_params: mmap.mmap,
 ) -> None:
