@@ -8,18 +8,19 @@ on:
 
 jobs:
   tox:
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [ "3.14", "type", "lint", "format", "format_pyproject" ]
 
+    name: tox (${{ matrix.env }})
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v9.0.0
       with:
         python-version: 3.14
-    - name: Install tox
-      run: |
-        pip install -U pip
-        pip install -U tox
     - name: Run tox
-      run: tox
+      run: uvx --with tox-uv tox -e ${{ matrix.env }}

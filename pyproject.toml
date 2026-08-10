@@ -34,7 +34,7 @@ lint.select = [ "B", "C4", "E", "F", "I", "N", "SIM", "UP", "W" ]
 lint.ignore = [ "B011" ]
 
 [tool.tox]
-requires = [ "tox>=4.19" ]
+requires = [ "tox>=4.19", "tox-uv>=1.36.0,<2" ]
 env_list = [ "3.14", "type", "lint", "format", "format_pyproject" ]
 
 [tool.tox.env.format]
