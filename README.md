@@ -32,7 +32,7 @@ Available commands at the `>` prompt:
 ## Evaluation data
 `hotaru` uses `HotaruEvaluator`, a trained evaluator, when `--midgame-params` is given (`--endgame-params` additionally enables endgame lookups). Without these options, it falls back to `RandomEvaluator`.
 ```
-uv run hotaru --midgame-params params_midgame.dat --endgame-params params_endgame.dat
+hotaru --midgame-params params_midgame.dat --endgame-params params_endgame.dat
 ```
 
 Both files are published as assets on the [GitHub Releases](https://github.com/mushitoriami/hotaru/releases) page (e.g. v0.1.2). Download them and pass their paths via the options above.
