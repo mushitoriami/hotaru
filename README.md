@@ -30,6 +30,9 @@ Available commands at the `>` prompt:
 - `quit` / `exit` — exit the CLI
 
 ## Evaluation data
-`hotaru` uses `HotaruEvaluator`, a trained evaluator, when `params_midgame.dat` is present in the current directory (`params_endgame.dat` additionally enables endgame lookups). Without these files, it falls back to `RandomEvaluator`.
+`hotaru` uses `HotaruEvaluator`, a trained evaluator, when `--midgame-params` is given (`--endgame-params` additionally enables endgame lookups). Without these options, it falls back to `RandomEvaluator`.
+```
+hotaru --midgame-params params_midgame.dat --endgame-params params_endgame.dat
+```
 
-Both files are published as assets on the [GitHub Releases](https://github.com/mushitoriami/hotaru/releases) page (e.g. v0.1.2). Download them and place them in the directory you run `hotaru` from.
+Both files are published as assets on the [GitHub Releases](https://github.com/mushitoriami/hotaru/releases) page (e.g. v0.1.2). Download them and pass their paths via the options above.

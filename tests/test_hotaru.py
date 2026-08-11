@@ -494,27 +494,25 @@ def test_autoplay_2(run_cli: Callable[[list[str]], list[str]]) -> None:
     assert wins[1] == wins[3] == 0 and 800 < wins[0] < 1200 and 800 < wins[2] < 1200
 
 
-@pytest.mark.skipif(
-    not Path("params_endgame.dat").exists(), reason="`params_endgame.dat` not found"
-)
-def test_hotaru_evaluator_endgame_only_outside_theo() -> None:
+def test_hotaru_evaluator_endgame_only_outside_theo(
+    endgame_params_path: Path,
+) -> None:
     state = new_state()
     state.dice = 1
-    evaluator = HotaruEvaluator(enable_midgame=False, enable_endgame=True)
+    evaluator = HotaruEvaluator(endgame_params=endgame_params_path)
     assert evaluator.eval(state) == dict.fromkeys(get_movables(state), 0)
 
 
-@pytest.mark.skipif(
-    not Path("params_midgame.dat").exists(), reason="`params_midgame.dat` not found"
-)
-def test_autoplay_3(run_cli: Callable[[list[str]], list[str]]) -> None:
+def test_autoplay_3(
+    run_cli: Callable[[list[str]], list[str]], midgame_params_path: Path
+) -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
         result = autoplay(
             [
                 RandomEvaluator(),
                 None,
-                HotaruEvaluator(),
+                HotaruEvaluator(midgame_params=midgame_params_path),
                 None,
             ]
         )
@@ -522,20 +520,21 @@ def test_autoplay_3(run_cli: Callable[[list[str]], list[str]]) -> None:
     assert wins[1] == wins[3] == 0 and wins[0] < 600
 
 
-@pytest.mark.skipif(
-    not Path("params_midgame.dat").exists(), reason="`params_midgame.dat` not found"
-)
-@pytest.mark.skipif(
-    not Path("params_endgame.dat").exists(), reason="`params_endgame.dat` not found"
-)
-def test_autoplay_4(run_cli: Callable[[list[str]], list[str]]) -> None:
+def test_autoplay_4(
+    run_cli: Callable[[list[str]], list[str]],
+    midgame_params_path: Path,
+    endgame_params_path: Path,
+) -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
         result = autoplay(
             [
-                HotaruEvaluator(),
+                HotaruEvaluator(midgame_params=midgame_params_path),
                 None,
-                HotaruEvaluator(enable_endgame=True),
+                HotaruEvaluator(
+                    midgame_params=midgame_params_path,
+                    endgame_params=endgame_params_path,
+                ),
                 None,
             ]
         )

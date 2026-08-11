@@ -229,17 +229,18 @@ class Evaluator(ABC):
 
 class HotaruEvaluator(Evaluator):
     def __init__(
-        self, enable_midgame: bool = True, enable_endgame: bool = False
+        self,
+        midgame_params: Path | None = None,
+        endgame_params: Path | None = None,
     ) -> None:
         self.params_midgame: bytes | None = None
-        if enable_midgame:
-            with open("params_midgame.dat", "rb") as f:
+        if midgame_params is not None:
+            with open(midgame_params, "rb") as f:
                 self.params_midgame = f.read()
         self.params_endgame: mmap.mmap | None = None
-        if enable_endgame:
-            with open("params_endgame.dat", "rb") as f:
+        if endgame_params is not None:
+            with open(endgame_params, "rb") as f:
                 self.params_endgame = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-        self.enable_endgame: bool = enable_endgame
 
     def score_theo(self, s: State, turn: int) -> float:
         assert self.params_endgame is not None
@@ -263,7 +264,7 @@ class HotaruEvaluator(Evaluator):
         result = {}
         for move in get_movables(state):
             state_next = apply_move(state, move)
-            if in_theo(state_next) and self.enable_endgame:
+            if in_theo(state_next) and self.params_endgame is not None:
                 result[move] = self.score_theo(state_next, state.turn)
             elif self.params_midgame is not None:
                 result[move] = self.score(state_next, state.turn)
@@ -330,13 +331,25 @@ def cli(
         help="comma-separated seat indices (0-3, at least 2) that participate,"
         " e.g. 0,2 (default: 0,1,2,3)",
     )
+    parser.add_argument(
+        "--midgame-params",
+        type=Path,
+        default=None,
+        help="path to the midgame parameters file"
+        " (enables HotaruEvaluator's midgame scoring if given)",
+    )
+    parser.add_argument(
+        "--endgame-params",
+        type=Path,
+        default=None,
+        help="path to the endgame parameters file"
+        " (enables HotaruEvaluator's endgame lookups if given)",
+    )
     args = parser.parse_args(argv)
 
-    enable_midgame = Path("params_midgame.dat").exists()
-    enable_endgame = Path("params_endgame.dat").exists()
     evaluator: Evaluator = (
-        HotaruEvaluator(enable_midgame, enable_endgame)
-        if enable_midgame or enable_endgame
+        HotaruEvaluator(args.midgame_params, args.endgame_params)
+        if args.midgame_params is not None or args.endgame_params is not None
         else RandomEvaluator()
     )
     state = new_state(players=args.players)
