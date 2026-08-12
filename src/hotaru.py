@@ -12,7 +12,7 @@ from math import comb
 from pathlib import Path
 
 
-@dataclass
+@dataclass(frozen=True)
 class State:
     players: frozenset[int]
     board: tuple[tuple[int, ...], ...]
@@ -69,34 +69,49 @@ def get_movables(state: State) -> list[int | None]:
 
 
 def apply_move(state: State, piece: int | None) -> State:
-    new = replace(state)
-    if new.turn is not None and piece is not None:
+    board = state.board
+    if state.turn is not None and piece is not None:
         move_to = (
-            new.board[new.turn][piece - 1] + new.dice
-            if new.board[new.turn][piece - 1] >= 4
+            board[state.turn][piece - 1] + state.dice
+            if board[state.turn][piece - 1] >= 4
             else 4
         )
-        board = [list(row) for row in new.board]
+        board_rows = [list(row) for row in board]
         for t in range(4):
             for p in range(4):
-                if is_same_pos(move_to, new.turn, board[t][p], t):
-                    board[t][p] = p
-        board[new.turn][piece - 1] = move_to
-        new.board = tuple(tuple(row) for row in board)
-    if piece is not None:
-        new.count_six = (new.count_six + 1) % 3 if new.dice == 6 else 0
-    else:
-        new.count_six = 0
-    new.count_start = (new.count_start + 1) % 3 if is_start(new) else 0
-    if new.turn is not None:
-        if set(new.board[new.turn]) == {44, 45, 46, 47}:
-            new.winner = new.turn
-            new.turn = None
+                if is_same_pos(move_to, state.turn, board_rows[t][p], t):
+                    board_rows[t][p] = p
+        board_rows[state.turn][piece - 1] = move_to
+        board = tuple(tuple(row) for row in board_rows)
+
+    count_six = (
+        (state.count_six + 1) % 3 if piece is not None and state.dice == 6 else 0
+    )
+    count_start = (
+        (state.count_start + 1) % 3 if is_start(replace(state, board=board)) else 0
+    )
+
+    turn = state.turn
+    winner = state.winner
+    dice = state.dice
+    if turn is not None:
+        if set(board[turn]) == {44, 45, 46, 47}:
+            winner = turn
+            turn = None
         else:
-            if new.count_six == 0 and new.count_start == 0:
-                new.turn = next_turn(new, new.turn)
-            new.dice = random.randint(1, 6)
-    return new
+            if count_six == 0 and count_start == 0:
+                turn = next_turn(state, turn)
+            dice = random.randint(1, 6)
+
+    return replace(
+        state,
+        board=board,
+        turn=turn,
+        winner=winner,
+        dice=dice,
+        count_six=count_six,
+        count_start=count_start,
+    )
 
 
 def _rotate_quarter(pos: tuple[int, int]) -> tuple[int, int]:
@@ -405,7 +420,7 @@ def cli(
             elif query[0] == "dice":
                 dice = int(query[1])
                 if 1 <= dice <= 6:
-                    state.dice = dice
+                    state = replace(state, dice=dice)
                     break
                 print_fn("Invalid dice roll: " + query[1])
             elif query[0] == "new":
