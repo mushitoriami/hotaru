@@ -23,7 +23,6 @@ Available commands at the `>` prompt:
 - `move <piece>` — move the given piece (1-4)
 - `pass` — pass the turn when no move is available
 - `dice <n>` — set the dice roll (1-6)
-- `eval` — show the evaluator's score for each legal move
 - `auto` — let the evaluator pick and play a move
 - `new` — start a new game
 - `undo` — undo the last move
