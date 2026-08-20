@@ -533,7 +533,12 @@ def test_hotaru_evaluator_endgame_only_outside_theo(
     endgame_params: mmap.mmap,
 ) -> None:
     state = replace(new_state(), dice=1)
-    assert hotaru_evaluator(state, None, endgame_params) == {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
+    assert hotaru_evaluator(state, None, endgame_params) == {
+        0: 0.0,
+        1: 0.0,
+        2: 0.0,
+        3: 0.0,
+    }
 
 
 def test_autoplay_3(midgame_params: bytes) -> None:

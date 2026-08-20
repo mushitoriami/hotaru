@@ -186,7 +186,9 @@ def _render_status(state: State, colored: bool) -> str:
 
 
 def visualize(state: State, colored: bool = True) -> str:
-    return _render_board(state, colored) + "\n\n" + _render_status(state, colored) + "\n"
+    return (
+        _render_board(state, colored) + "\n\n" + _render_status(state, colored) + "\n"
+    )
 
 
 def in_theo(s: State, turn: int) -> bool:
@@ -283,7 +285,7 @@ def hotaru_evaluator(
 
 
 def random_evaluator(state: State) -> dict[int, float]:
-    return {turn: 0.0 for turn in range(4)}
+    return dict.fromkeys(range(4), 0.0)
 
 
 def get_absolute_pos(pos: int, turn: int) -> int:

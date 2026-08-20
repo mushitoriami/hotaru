@@ -17,7 +17,7 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "shizuku",
+  "shizuku @ git+https://github.com/mushitoriami/shizuku.git",
 ]
 scripts = { hotaru = "hotaru:cli" }
 
@@ -28,9 +28,6 @@ dev = [
   "pytest>=9.0.2,<10",
   "ruff>=0.14.11,<0.15",
 ]
-
-[tool.uv.sources]
-shizuku = { git = "https://github.com/mushitoriami/shizuku.git" }
 
 [tool.ruff]
 target-version = "py314"
