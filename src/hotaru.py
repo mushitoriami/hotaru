@@ -3,13 +3,15 @@ from __future__ import annotations
 import argparse
 import mmap
 import random
-import readline  # noqa: F401
 import struct
-from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from math import comb
 from pathlib import Path
+from typing import IO
+
+from shizuku import Agent, Cli, Game
+from shizuku import play_auto as engine_play_auto
 
 
 @dataclass(frozen=True)
@@ -68,7 +70,7 @@ def get_movables(state: State) -> list[int | None]:
     return moves
 
 
-def apply_move(state: State, piece: int | None) -> State:
+def apply_move(state: State, piece: int | None) -> set[State]:
     board = state.board
     if state.turn is not None and piece is not None:
         move_to = (
@@ -93,7 +95,7 @@ def apply_move(state: State, piece: int | None) -> State:
 
     turn = state.turn
     winner = state.winner
-    dice = state.dice
+    reroll = False
     if turn is not None:
         if set(board[turn]) == {44, 45, 46, 47}:
             winner = turn
@@ -101,17 +103,19 @@ def apply_move(state: State, piece: int | None) -> State:
         else:
             if count_six == 0 and count_start == 0:
                 turn = next_turn(state, turn)
-            dice = random.randint(1, 6)
+            reroll = True
 
-    return replace(
+    base = replace(
         state,
         board=board,
         turn=turn,
         winner=winner,
-        dice=dice,
         count_six=count_six,
         count_start=count_start,
     )
+    if reroll:
+        return {replace(base, dice=dice) for dice in range(1, 7)}
+    return {base}
 
 
 def _rotate_quarter(pos: tuple[int, int]) -> tuple[int, int]:
@@ -182,20 +186,14 @@ def _render_status(state: State, colored: bool) -> str:
 
 
 def visualize(state: State, colored: bool = True) -> str:
-    return _render_board(state, colored) + "\n\n" + _render_status(state, colored)
-
-
-def in_theo(s: State) -> bool:
     return (
-        s.board[0][0] == 47
-        or s.board[0][1] == 47
-        or s.board[0][2] == 47
-        or s.board[0][3] == 47
-    ) and (
-        s.board[2][0] == 47
-        or s.board[2][1] == 47
-        or s.board[2][2] == 47
-        or s.board[2][3] == 47
+        _render_board(state, colored) + "\n\n" + _render_status(state, colored) + "\n"
+    )
+
+
+def in_theo(s: State, turn: int) -> bool:
+    return any(p == 47 for p in s.board[turn]) and any(
+        p == 47 for p in s.board[(turn + 2) % 4]
     )
 
 
@@ -230,67 +228,64 @@ def combination_rank(x1: int, x2: int, x3: int) -> int:
 
 
 def index_state(state: State, turn: int) -> int:
-    p = combination_rank(*rank_pieces(state.board[0]))
-    o = combination_rank(*rank_pieces(state.board[2]))
+    p = combination_rank(*rank_pieces(state.board[turn]))
+    o = combination_rank(*rank_pieces(state.board[(turn + 2) % 4]))
     span = comb(47, 3)
-    return span * p + o if turn == 0 else span * o + p
+    return span * p + o
 
 
-class Evaluator(ABC):
-    @abstractmethod
-    def eval(self, state: State) -> dict[int | None, float]:
-        pass
+Evaluator = Callable[[State], dict[int, float]]
 
 
-class HotaruEvaluator(Evaluator):
-    def __init__(
-        self,
-        midgame_params: Path | None = None,
-        endgame_params: Path | None = None,
-    ) -> None:
-        self.params_midgame: bytes | None = None
-        if midgame_params is not None:
-            with open(midgame_params, "rb") as f:
-                self.params_midgame = f.read()
-        self.params_endgame: mmap.mmap | None = None
-        if endgame_params is not None:
-            with open(endgame_params, "rb") as f:
-                self.params_endgame = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-
-    def score_theo(self, s: State, turn: int) -> float:
-        assert self.params_endgame is not None
-        return 1 - 2 * eval_state_theo(self.params_endgame, s, 1 if turn == 0 else 0)
-
-    def score(self, state: State, turn: int) -> float:
-        assert self.params_midgame is not None
-        p = [piece * 2 for piece in state.board[turn]] + [
-            piece * 2 + 1 for piece in state.board[(turn + 2) % 4]
-        ]
-        features = [p1 * 96 * 96 + p2 * 96 + p3 for p1 in p for p2 in p for p3 in p]
-        r = sum(
-            struct.unpack("d", self.params_midgame[i * 8 : i * 8 + 8])[0]
-            for i in features
-        )
-        assert isinstance(r, float)
-        return 2 * r - 1
-
-    def eval(self, state: State) -> dict[int | None, float]:
-        assert state.turn == 0 or state.turn == 2
-        result = {}
-        for move in get_movables(state):
-            state_next = apply_move(state, move)
-            if in_theo(state_next) and self.params_endgame is not None:
-                result[move] = self.score_theo(state_next, state.turn)
-            elif self.params_midgame is not None:
-                result[move] = self.score(state_next, state.turn)
-            else:
-                result[move] = 0
-        return result
+def score_midgame(
+    params_midgame: bytes | None, state: State, turn: int
+) -> float | None:
+    if params_midgame is None:
+        return None
+    p = [piece * 2 for piece in state.board[turn]] + [
+        piece * 2 + 1 for piece in state.board[(turn + 2) % 4]
+    ]
+    features = [p1 * 96 * 96 + p2 * 96 + p3 for p1 in p for p2 in p for p3 in p]
+    r = sum(struct.unpack("d", params_midgame[i * 8 : i * 8 + 8])[0] for i in features)
+    assert isinstance(r, float)
+    return 2 * r - 1
 
 
-class RandomEvaluator(Evaluator):
-    def eval(self, state: State) -> dict[int | None, float]:
-        return dict.fromkeys(get_movables(state), 0)
+def score_endgame(
+    params_endgame: mmap.mmap | None, s: State, turn: int
+) -> float | None:
+    if params_endgame is None or not in_theo(s, turn):
+        return None
+    return 1 - 2 * eval_state_theo(params_endgame, s, (turn + 2) % 4)
+
+
+def score_player(
+    state: State,
+    turn: int,
+    params_midgame: bytes | None,
+    params_endgame: mmap.mmap | None,
+) -> float:
+    score = score_endgame(params_endgame, state, turn)
+    if score is None:
+        score = score_midgame(params_midgame, state, turn)
+    return score if score is not None else 0
+
+
+def hotaru_evaluator(
+    state: State,
+    params_midgame: bytes | None,
+    params_endgame: mmap.mmap | None,
+) -> dict[int, float]:
+    def score(turn: int) -> float:
+        if turn not in state.players:
+            return 0.0
+        return score_player(state, turn, params_midgame, params_endgame)
+
+    return {turn: score(turn) for turn in range(4)}
+
+
+def random_evaluator(state: State) -> dict[int, float]:
+    return dict.fromkeys(range(4), 0.0)
 
 
 def get_absolute_pos(pos: int, turn: int) -> int:
@@ -303,22 +298,41 @@ def is_same_pos(pos1: int, turn1: int, pos2: int, turn2: int) -> bool:
     return get_absolute_pos(pos1, turn1) == get_absolute_pos(pos2, turn2)
 
 
+def _current_player(state: State) -> int:
+    assert state.turn is not None
+    return state.turn + 1
+
+
+HOTARU_GAME: Game[State, int] = Game(
+    get_moves=lambda state: frozenset(get_movables(state)),
+    apply_move=lambda move, state: apply_move(state, move),
+    is_end=lambda state: state.turn is None,
+    current_player=_current_player,
+    player_count=lambda state: 4,
+    parse_move=int,
+    format_move=str,
+    render=visualize,
+)
+
+
+def _adapt_evaluator(evaluator: Evaluator) -> Callable[[State], dict[int, float]]:
+    def adapted(state: State) -> dict[int, float]:
+        return {seat + 1: score for seat, score in evaluator(state).items()}
+
+    return adapted
+
+
+def choose_move(state: State, evaluator: Evaluator) -> int | None:
+    assert state.turn is not None
+    return engine_play_auto(HOTARU_GAME, Agent(_adapt_evaluator(evaluator), 0), state)
+
+
 def autoplay(evaluators: list[Evaluator | None]) -> int:
     state = new_state()
     while state.turn is not None:
         evaluator = evaluators[state.turn]
-        if evaluator is None:
-            state = apply_move(state, None)
-        else:
-            scores = evaluator.eval(state)
-            move = random.choice(
-                [
-                    move
-                    for move, score in scores.items()
-                    if score == max(scores.values())
-                ]
-            )
-            state = apply_move(state, move)
+        move = None if evaluator is None else choose_move(state, evaluator)
+        state = random.choice(list(apply_move(state, move)))
     assert state.winner is not None
     return state.winner
 
@@ -335,8 +349,8 @@ def parse_players(value: str) -> frozenset[int]:
 
 def cli(
     argv: list[str] | None = None,
-    input_fn: Callable[[str], str] = input,
-    print_fn: Callable[..., None] = print,
+    stdin: IO[str] | None = None,
+    stdout: IO[str] | None = None,
 ) -> None:
     parser = argparse.ArgumentParser(prog="hotaru")
     parser.add_argument(
@@ -350,77 +364,34 @@ def cli(
         "--midgame-params",
         type=Path,
         default=None,
-        help="path to the midgame parameters file"
-        " (enables HotaruEvaluator's midgame scoring if given)",
+        help="path to the midgame parameters file (enables midgame scoring if given)",
     )
     parser.add_argument(
         "--endgame-params",
         type=Path,
         default=None,
-        help="path to the endgame parameters file"
-        " (enables HotaruEvaluator's endgame lookups if given)",
+        help="path to the endgame parameters file (enables endgame lookups if given)",
     )
     args = parser.parse_args(argv)
 
+    params_midgame: bytes | None = None
+    if args.midgame_params is not None:
+        with open(args.midgame_params, "rb") as f:
+            params_midgame = f.read()
+    params_endgame: mmap.mmap | None = None
+    if args.endgame_params is not None:
+        with open(args.endgame_params, "rb") as f:
+            params_endgame = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+
     evaluator: Evaluator = (
-        HotaruEvaluator(args.midgame_params, args.endgame_params)
-        if args.midgame_params is not None or args.endgame_params is not None
-        else RandomEvaluator()
+        (lambda state: hotaru_evaluator(state, params_midgame, params_endgame))
+        if params_midgame is not None or params_endgame is not None
+        else random_evaluator
     )
-    state = new_state(players=args.players)
-    history: list[State] = []
-    query_previous = [""]
-    while True:
-        movables = get_movables(state)
-        print_fn(visualize(state))
-        while True:
-            query = input_fn("> ").split()
-            if len(query) == 0:
-                query = query_previous
-            else:
-                query_previous = query
-            if query[0] == "move":
-                piece = int(query[1])
-                if piece in movables:
-                    history.append(state)
-                    state = apply_move(state, piece)
-                    break
-                print_fn("Cannot move: " + query[1])
-            elif query[0] == "pass":
-                if None in movables:
-                    history.append(state)
-                    state = apply_move(state, None)
-                    break
-                print_fn("Cannot pass")
-            elif query[0] == "auto":
-                scores = evaluator.eval(state)
-                move = random.choice(
-                    [
-                        move
-                        for move, score in scores.items()
-                        if score == max(scores.values())
-                    ]
-                )
-                history.append(state)
-                state = apply_move(state, move)
-                break
-            elif query[0] == "dice":
-                dice = int(query[1])
-                if 1 <= dice <= 6:
-                    state = replace(state, dice=dice)
-                    break
-                print_fn("Invalid dice roll: " + query[1])
-            elif query[0] == "new":
-                state = new_state(players=args.players)
-                history = []
-                break
-            elif query[0] in ("undo",):
-                if history:
-                    state = history.pop()
-                else:
-                    print_fn("Cannot undo")
-                break
-            elif query[0] in ("quit", "exit"):
-                return
-            else:
-                print_fn("Unknown command")
+    Cli(
+        HOTARU_GAME,
+        Agent(_adapt_evaluator(evaluator), 0),
+        new_state(players=args.players),
+        stdin=stdin,
+        stdout=stdout,
+    ).cmdloop()

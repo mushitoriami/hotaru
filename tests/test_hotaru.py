@@ -1,22 +1,29 @@
-from collections.abc import Callable
+import io
+import mmap
 from dataclasses import replace
-from pathlib import Path
 
 import pytest
+from shizuku import Agent, Cli
 
 from hotaru import (
-    HotaruEvaluator,
-    RandomEvaluator,
+    HOTARU_GAME,
+    State,
     apply_move,
     autoplay,
     cli,
     get_absolute_pos,
     get_movables,
+    hotaru_evaluator,
     is_same_pos,
     is_start,
     new_state,
+    random_evaluator,
     visualize,
 )
+
+
+def apply_move_one(state: State, piece: int | None) -> State:
+    return next(iter(apply_move(state, piece)))
 
 
 def test_init_board() -> None:
@@ -40,9 +47,10 @@ def test_board_0() -> None:
         + "    [R3][R4]    [  ][  ][  ]    [Y1][Y3]    \n"
         + "                [  ][  ][  ]                \n"
         + "\n"
-        + "Turn: R, Dice: 1"
+        + "Turn: R, Dice: 1\n"
     )
-    assert RandomEvaluator().eval(state) == {None: 0}
+    assert get_movables(state) == [None]
+    assert random_evaluator(state) == {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
 
 
 def test_board_1() -> None:
@@ -53,7 +61,7 @@ def test_board_1() -> None:
         turn=0,
     )
     assert get_movables(state) == [4]
-    state = apply_move(state, 4)
+    state = apply_move_one(state, 4)
     assert state.board == ((46, 1, 8, 12), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state = replace(state, dice=5)
     assert is_start(state) is True
@@ -71,9 +79,10 @@ def test_board_1() -> None:
         + "    [  ][  ]    [  ][  ][  ]    [Y1][Y3]    \n"
         + "                [  ][  ][  ]                \n"
         + "\n"
-        + "Turn: G, Dice: 5"
+        + "Turn: G, Dice: 5\n"
     )
-    assert RandomEvaluator().eval(state) == {None: 0}
+    assert get_movables(state) == [None]
+    assert random_evaluator(state) == {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
 
 
 def test_board_2() -> None:
@@ -84,7 +93,7 @@ def test_board_2() -> None:
         turn=0,
     )
     assert get_movables(state) == [1]
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.board == ((16, 4, 2, 43), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state = replace(state, dice=5)
     assert is_start(state) is False
@@ -102,9 +111,10 @@ def test_board_2() -> None:
         + "    [R3][  ]    [  ][  ][  ]    [Y1][Y3]    \n"
         + "                [R2][R4][  ]                \n"
         + "\n"
-        + "Turn: R, Dice: 5"
+        + "Turn: R, Dice: 5\n"
     )
-    assert RandomEvaluator().eval(state) == {1: 0, 2: 0}
+    assert get_movables(state) == [1, 2]
+    assert random_evaluator(state) == {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
 
 
 def test_board_3() -> None:
@@ -115,7 +125,7 @@ def test_board_3() -> None:
         turn=0,
     )
     assert get_movables(state) == [2, 4]
-    state = apply_move(state, 2)
+    state = apply_move_one(state, 2)
     assert state.board == ((0, 9, 46, 15), (0, 34, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3))
     state = replace(state, dice=5)
     assert is_start(state) is False
@@ -133,9 +143,10 @@ def test_board_3() -> None:
         + "    [  ][  ]    [  ][  ][  ]    [Y1][Y3]    \n"
         + "                [G2][  ][  ]                \n"
         + "\n"
-        + "Turn: G, Dice: 5"
+        + "Turn: G, Dice: 5\n"
     )
-    assert RandomEvaluator().eval(state) == {2: 0}
+    assert get_movables(state) == [2]
+    assert random_evaluator(state) == {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
 
 
 def test_board_4() -> None:
@@ -146,7 +157,7 @@ def test_board_4() -> None:
         turn=0,
     )
     assert get_movables(state) == [1, 3, 4]
-    state = apply_move(state, 3)
+    state = apply_move_one(state, 3)
     assert state.board == ((13, 43, 4, 3), (0, 1, 2, 3), (0, 1, 2, 3), (0, 29, 2, 3))
     state = replace(state, dice=3)
     assert is_start(state) is False
@@ -164,9 +175,10 @@ def test_board_4() -> None:
         + "    [  ][R4]    [  ][  ][  ]    [Y1][Y3]    \n"
         + "                [R3][R2][  ]                \n"
         + "\n"
-        + "Turn: R, Dice: 3"
+        + "Turn: R, Dice: 3\n"
     )
-    assert RandomEvaluator().eval(state) == {1: 0, 2: 0, 3: 0}
+    assert get_movables(state) == [1, 2, 3]
+    assert random_evaluator(state) == {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
 
 
 def test_board_5() -> None:
@@ -177,7 +189,7 @@ def test_board_5() -> None:
         turn=1,
     )
     assert get_movables(state) == [1, 3, 4]
-    state = apply_move(state, 4)
+    state = apply_move_one(state, 4)
     assert state.board == ((0, 29, 2, 3), (13, 43, 2, 4), (0, 1, 2, 3), (0, 1, 2, 3))
     state = replace(state, dice=4)
     assert is_start(state) is False
@@ -195,9 +207,10 @@ def test_board_5() -> None:
         + "    [R3][R4]    [  ][  ][  ]    [Y1][Y3]    \n"
         + "                [  ][  ][  ]                \n"
         + "\n"
-        + "Turn: G, Dice: 4"
+        + "Turn: G, Dice: 4\n"
     )
-    assert RandomEvaluator().eval(state) == {1: 0, 2: 0, 4: 0}
+    assert get_movables(state) == [1, 2, 4]
+    assert random_evaluator(state) == {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
 
 
 def test_get_absolute_pos() -> None:
@@ -281,17 +294,17 @@ def test_three_sixes_rule() -> None:
     )
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 1
     assert state.turn == 0
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 2
     assert state.turn == 0
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 0
     assert state.turn == 1
 
@@ -305,17 +318,17 @@ def test_three_sixes_rule_reset_on_non_six() -> None:
     )
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 1
     assert state.turn == 0
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 2
     assert state.turn == 0
 
     state = replace(state, dice=3)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 0
     assert state.turn == 1
 
@@ -330,17 +343,17 @@ def test_three_starts_rule() -> None:
 
     state = replace(state, dice=3)
     assert get_movables(state) == [None]
-    state = apply_move(state, None)
+    state = apply_move_one(state, None)
     assert state.count_start == 1
     assert state.turn == 0
 
     state = replace(state, dice=2)
-    state = apply_move(state, None)
+    state = apply_move_one(state, None)
     assert state.count_start == 2
     assert state.turn == 0
 
     state = replace(state, dice=4)
-    state = apply_move(state, None)
+    state = apply_move_one(state, None)
     assert state.count_start == 0
     assert state.turn == 1
 
@@ -354,17 +367,17 @@ def test_three_starts_rule_reset_on_leaving_start() -> None:
     )
 
     state = replace(state, dice=3)
-    state = apply_move(state, None)
+    state = apply_move_one(state, None)
     assert state.count_start == 1
     assert state.turn == 0
 
     state = replace(state, dice=2)
-    state = apply_move(state, None)
+    state = apply_move_one(state, None)
     assert state.count_start == 2
     assert state.turn == 0
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.board[0][0] == 4
     assert is_start(state) is False
     assert state.count_start == 0
@@ -382,19 +395,19 @@ def test_three_starts_with_six_interaction() -> None:
     )
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert is_start(state) is False
     assert state.count_start == 0
     assert state.count_six == 1
     assert state.turn == 0
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 2
     assert state.turn == 0
 
     state = replace(state, dice=6)
-    state = apply_move(state, 1)
+    state = apply_move_one(state, 1)
     assert state.count_six == 0
     assert state.turn == 1
 
@@ -409,112 +422,106 @@ def test_count_six_reset_on_pass() -> None:
 
     state = replace(state, dice=6)
     assert get_movables(state) == [None]
-    state = apply_move(state, None)
+    state = apply_move_one(state, None)
 
     assert state.count_six == 0
     assert state.turn == 1
 
 
-@pytest.fixture
-def run_cli() -> Callable[..., list[str]]:
-    def _run(inputs: list[str], argv: list[str] | None = None) -> list[str]:
-        input_iter = iter(inputs)
-        outputs: list[str] = []
-
-        def mock_input(prompt: str) -> str:
-            return next(input_iter)
-
-        def mock_print(*args: object) -> None:
-            outputs.append(" ".join(str(arg) for arg in args))
-
-        cli(
-            argv=argv if argv is not None else [],
-            input_fn=mock_input,
-            print_fn=mock_print,
-        )
-        return outputs
-
-    return _run
+def run_cli(initial: State, input_text: str, depth: int = 0) -> str:
+    stdout = io.StringIO()
+    Cli(
+        HOTARU_GAME,
+        Agent(lambda state: dict.fromkeys(range(1, 5), 0.0), depth),
+        initial,
+        stdin=io.StringIO(input_text),
+        stdout=stdout,
+    ).cmdloop()
+    return stdout.getvalue()
 
 
-def test_cli_1(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["dice 6", "move 1", "quit"])
-    assert any("Turn:" in output for output in outputs)
-    assert not any("Cannot" in output for output in outputs)
+def test_cli_move() -> None:
+    state = replace(
+        new_state(),
+        board=((10, 4, 2, 43), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3)),
+        dice=6,
+        turn=0,
+    )
+    output = run_cli(state, "move 1\n")
+    assert "Cannot Move" not in output
 
 
-def test_cli_2(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["dice 3", "move 1", "exit"])
-    assert any("Cannot move: 1" in output for output in outputs)
-    assert any("Turn:" in output for output in outputs)
+def test_cli_move_illegal() -> None:
+    state = replace(new_state(), dice=3, turn=0)
+    output = run_cli(state, "move 1\n")
+    assert "Cannot Move: 1" in output
 
 
-def test_cli_3(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["dice 3", "pass", "quit"])
-    assert not any("Cannot pass" in output for output in outputs)
+def test_cli_pass() -> None:
+    state = replace(new_state(), dice=3, turn=0)
+    output = run_cli(state, "pass\n")
+    assert "Cannot Pass" not in output
 
 
-def test_cli_4(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["dice 6", "pass", "quit"])
-    assert any("Cannot pass" in output for output in outputs)
+def test_cli_pass_illegal() -> None:
+    state = replace(new_state(), dice=6, turn=0)
+    output = run_cli(state, "pass\n")
+    assert "Cannot Pass" in output
 
 
-def test_cli_5(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["invalid", "quit"])
-    assert any("Unknown command" in output for output in outputs)
+def test_cli_auto() -> None:
+    state = replace(
+        new_state(),
+        board=((10, 4, 2, 43), (0, 1, 2, 3), (0, 1, 2, 3), (0, 1, 2, 3)),
+        dice=6,
+        turn=0,
+    )
+    output = run_cli(state, "auto\n")
+    assert "Cannot" not in output
+    assert output.count("Dice:") == 2
 
 
-def test_cli_6(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["undo", "quit"])
-    assert any("Cannot undo" in output for output in outputs)
+def test_cli_unknown_command() -> None:
+    state = replace(new_state(), dice=3, turn=0)
+    output = run_cli(state, "invalid\n")
+    assert "Unknown syntax: invalid" in output
 
 
-def test_cli_7(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["dice 6", "move 1", "undo", "quit"])
-    assert not any("Cannot undo" in output for output in outputs)
-
-
-def test_cli_8(run_cli: Callable[[list[str]], list[str]]) -> None:
-    outputs = run_cli(["dice 6", "auto", "quit"])
-    boards = [output for output in outputs if "Turn:" in output]
-    assert len(boards) == 3
-    assert boards[1] != boards[2]
-
-
-def test_cli_players_option(run_cli: Callable[..., list[str]]) -> None:
+def test_cli_players_option() -> None:
     green_bg, reset = "\033[97;42m", "\033[0m"
-    outputs = run_cli(["quit"], argv=["--players", "1,3"])
-    assert any(f"Turn: {green_bg}G{reset}" in output for output in outputs)
+    stdout = io.StringIO()
+    cli(argv=["--players", "1,3"], stdin=io.StringIO(""), stdout=stdout)
+    assert f"Turn: {green_bg}G{reset}" in stdout.getvalue()
 
 
-def test_cli_players_option_invalid(run_cli: Callable[..., list[str]]) -> None:
+def test_cli_players_option_invalid() -> None:
     with pytest.raises(SystemExit):
-        run_cli(["quit"], argv=["--players", "0"])
+        cli(argv=["--players", "0"])
 
 
-def test_autoplay_1(run_cli: Callable[[list[str]], list[str]]) -> None:
+def test_autoplay_1() -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
         result = autoplay(
             [
-                RandomEvaluator(),
-                RandomEvaluator(),
-                RandomEvaluator(),
-                RandomEvaluator(),
+                random_evaluator,
+                random_evaluator,
+                random_evaluator,
+                random_evaluator,
             ]
         )
         wins[result] += 1
     assert all(400 < win < 600 for win in wins)
 
 
-def test_autoplay_2(run_cli: Callable[[list[str]], list[str]]) -> None:
+def test_autoplay_2() -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
         result = autoplay(
             [
-                RandomEvaluator(),
+                random_evaluator,
                 None,
-                RandomEvaluator(),
+                random_evaluator,
                 None,
             ]
         )
@@ -523,23 +530,25 @@ def test_autoplay_2(run_cli: Callable[[list[str]], list[str]]) -> None:
 
 
 def test_hotaru_evaluator_endgame_only_outside_theo(
-    endgame_params_path: Path,
+    endgame_params: mmap.mmap,
 ) -> None:
     state = replace(new_state(), dice=1)
-    evaluator = HotaruEvaluator(endgame_params=endgame_params_path)
-    assert evaluator.eval(state) == dict.fromkeys(get_movables(state), 0)
+    assert hotaru_evaluator(state, None, endgame_params) == {
+        0: 0.0,
+        1: 0.0,
+        2: 0.0,
+        3: 0.0,
+    }
 
 
-def test_autoplay_3(
-    run_cli: Callable[[list[str]], list[str]], midgame_params_path: Path
-) -> None:
+def test_autoplay_3(midgame_params: bytes) -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
         result = autoplay(
             [
-                RandomEvaluator(),
+                random_evaluator,
                 None,
-                HotaruEvaluator(midgame_params=midgame_params_path),
+                lambda state: hotaru_evaluator(state, midgame_params, None),
                 None,
             ]
         )
@@ -548,20 +557,16 @@ def test_autoplay_3(
 
 
 def test_autoplay_4(
-    run_cli: Callable[[list[str]], list[str]],
-    midgame_params_path: Path,
-    endgame_params_path: Path,
+    midgame_params: bytes,
+    endgame_params: mmap.mmap,
 ) -> None:
     wins = [0, 0, 0, 0]
     for _ in range(2000):
         result = autoplay(
             [
-                HotaruEvaluator(midgame_params=midgame_params_path),
+                lambda state: hotaru_evaluator(state, midgame_params, None),
                 None,
-                HotaruEvaluator(
-                    midgame_params=midgame_params_path,
-                    endgame_params=endgame_params_path,
-                ),
+                lambda state: hotaru_evaluator(state, midgame_params, endgame_params),
                 None,
             ]
         )

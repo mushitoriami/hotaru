@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import mmap
 from pathlib import Path
 
 import pytest
@@ -36,3 +37,15 @@ def endgame_params_path(request: pytest.FixtureRequest) -> Path:
     if path is None:
         pytest.skip("--endgame-params-path not given")
     return Path(path)
+
+
+@pytest.fixture
+def midgame_params(midgame_params_path: Path) -> bytes:
+    with open(midgame_params_path, "rb") as f:
+        return f.read()
+
+
+@pytest.fixture
+def endgame_params(endgame_params_path: Path) -> mmap.mmap:
+    with open(endgame_params_path, "rb") as f:
+        return mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)

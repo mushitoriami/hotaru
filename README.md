@@ -29,7 +29,7 @@ Available commands at the `>` prompt:
 - `quit` / `exit` — exit the CLI
 
 ## Evaluation data
-`hotaru` uses `HotaruEvaluator`, a trained evaluator, when `--midgame-params` is given (`--endgame-params` additionally enables endgame lookups). Without these options, it falls back to `RandomEvaluator`.
+`hotaru` uses `make_hotaru_evaluator`, a trained evaluator, when `--midgame-params` is given (`--endgame-params` additionally enables endgame lookups). Without these options, it falls back to `random_evaluator`.
 ```
 hotaru --midgame-params params_midgame.dat --endgame-params params_endgame.dat
 ```
