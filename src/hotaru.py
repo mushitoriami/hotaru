@@ -10,8 +10,7 @@ from math import comb
 from pathlib import Path
 from typing import IO
 
-from shizuku import Agent, Cli, Game
-from shizuku import play_auto as engine_play_auto
+from shizuku import Agent, Cli, Game, play_auto
 
 
 @dataclass(frozen=True)
@@ -324,7 +323,7 @@ def _adapt_evaluator(evaluator: Evaluator) -> Callable[[State], dict[int, float]
 
 def choose_move(state: State, evaluator: Evaluator) -> int | None:
     assert state.turn is not None
-    return engine_play_auto(HOTARU_GAME, Agent(_adapt_evaluator(evaluator), 0), state)
+    return play_auto(HOTARU_GAME, Agent(_adapt_evaluator(evaluator), 0), state)
 
 
 def autoplay(evaluators: list[Evaluator | None]) -> int:
